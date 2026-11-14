@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { prayerSettings, tenants, type BankAccount, type IqomahMinutes, type PrayerAdjustments } from "@/db/schema";
+import { prayerSettings, tenants } from "@/db/schema";
 import { TIMEZONES } from "@/lib/constants";
-import { ADJUSTABLE_PRAYERS, CALCULATION_METHODS, FARDH_PRAYERS, MAX_ADJUSTMENT } from "@/lib/prayer";
+import { CALCULATION_METHODS } from "@/lib/prayer";
+import { parseBankAccounts, parsePrayerTuning } from "@/lib/settings-parse";
 import { requireTenantAccess } from "@/lib/session";
 import { uploadImage } from "@/lib/storage";
 
@@ -37,41 +38,6 @@ const settingsSchema = z.object({
   bankAccounts: z.string().max(2000).optional(),
   isPublished: z.literal("on").optional(),
 });
-
-/** Baca koreksi per waktu (adj_subuh, …) & iqomah per waktu (iqomah_subuh, …). */
-function parsePrayerTuning(formData: FormData) {
-  const errors: Record<string, string[]> = {};
-  const num = (name: string, min: number, max: number) => {
-    const raw = String(formData.get(name) ?? "").trim();
-    if (raw === "") return 0;
-    const n = Number(raw);
-    if (!Number.isInteger(n) || n < min || n > max) {
-      errors[name] = [`Isi bilangan bulat ${min} s.d. ${max}`];
-      return 0;
-    }
-    return n;
-  };
-  const adjustments: PrayerAdjustments = {};
-  for (const k of ADJUSTABLE_PRAYERS) {
-    const v = num(`adj_${k}`, -MAX_ADJUSTMENT, MAX_ADJUSTMENT);
-    if (v) adjustments[k as keyof PrayerAdjustments] = v;
-  }
-  const iqomahMinutes: IqomahMinutes = {};
-  for (const k of FARDH_PRAYERS) {
-    iqomahMinutes[k as keyof IqomahMinutes] = num(`iqomah_${k}`, 0, 60);
-  }
-  return { adjustments, iqomahMinutes, errors };
-}
-
-/** Format per baris: "Bank | Nomor Rekening | Atas Nama". */
-function parseBankAccounts(input?: string): BankAccount[] {
-  return (input ?? "")
-    .split("\n")
-    .map((line) => line.split("|").map((s) => s.trim()))
-    .filter((p) => p.length >= 3 && p[0] && p[1])
-    .slice(0, 10)
-    .map(([bank, number, holder]) => ({ bank, number, holder }));
-}
 
 export async function updateSettings(slug: string, _prev: SettingsFormState, formData: FormData): Promise<SettingsFormState> {
   const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
