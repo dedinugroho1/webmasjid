@@ -6,7 +6,7 @@
  *
  * Akun harus sudah dibuat (mis. lewat /daftar atau undangan).
  */
-import "dotenv/config";
+import "./load-env";
 import { eq } from "drizzle-orm";
 import { db } from "../src/db";
 import { sessions, users } from "../src/db/schema";
