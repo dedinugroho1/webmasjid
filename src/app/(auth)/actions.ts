@@ -123,3 +123,44 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
 
   redirect(`/${data.slug}/admin?welcome=1`);
 }
+
+// ─── Lupa & reset password ──────────────────────────────────────────────
+export type ResetRequestState = { sent?: boolean; fieldErrors?: Record<string, string[] | undefined> } | null;
+
+export async function requestResetAction(_prev: ResetRequestState, formData: FormData): Promise<ResetRequestState> {
+  const parsed = z.object({ email: z.email("Email tidak valid") }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  try {
+    await auth.api.requestPasswordReset({
+      body: { email: parsed.data.email, redirectTo: "/reset-password" },
+      headers: await headers(),
+    });
+  } catch (e) {
+    // Jangan bocorkan apakah email terdaftar.
+    if (!(e instanceof APIError)) throw e;
+  }
+  return { sent: true };
+}
+
+const resetSchema = z
+  .object({
+    token: z.string().min(1),
+    newPassword: z.string().min(8, "Password minimal 8 karakter").max(128),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, { path: ["confirmPassword"], message: "Konfirmasi tidak sama" });
+
+export async function resetPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = resetSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  try {
+    await auth.api.resetPassword({
+      body: { token: parsed.data.token, newPassword: parsed.data.newPassword },
+      headers: await headers(),
+    });
+  } catch (e) {
+    if (e instanceof APIError) return { error: "Link reset tidak valid atau kedaluwarsa. Silakan minta link baru." };
+    throw e;
+  }
+  redirect("/masuk?reset=1");
+}
