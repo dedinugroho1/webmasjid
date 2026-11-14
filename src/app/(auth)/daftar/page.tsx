@@ -12,7 +12,7 @@ export default function DaftarPage() {
       <CardHeader>
         <CardTitle className="text-xl">Daftarkan Masjid Anda</CardTitle>
         <CardDescription>
-          Gratis selamanya. Website masjid Anda langsung aktif lengkap dengan jadwal sholat, buku kas, dan TV display.
+          Gratis selamanya. Website masjid Anda langsung aktif lengkap dengan jadwal sholat, buku kas, dan infaq digital.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
