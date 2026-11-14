@@ -4,11 +4,10 @@
 
 ```
                        ┌──────────────────────────── Next.js 16 (App Router) ────────────────────────────┐
- Browser / Smart TV ──▶│ proxy.ts ─▶ /                 Landing + direktori masjid                       │
+ Browser ────────────▶│ proxy.ts ─▶ /                 Landing + direktori masjid                       │
                        │             /masuk, /daftar   Server Actions → Better Auth                      │
                        │             /api/auth/*       Better Auth handler                               │
                        │             /{slug}           Website publik masjid  (RSC, force-dynamic)       │
-                       │             /{slug}/tv        TV Display (client, hitung jadwal lokal)          │
                        │             /{slug}/admin/*   Dashboard DKM ─▶ requireTenantAccess(slug, roles) │
                        └───────────────┬──────────────────────────────────────────────────────────────────┘
                                        │ Drizzle ORM (drizzle-orm/neon-serverless)
@@ -55,17 +54,9 @@ Nominal disimpan sebagai `bigint` Rupiah utuh (tanpa desimal) untuk menghindari 
 
 ## Jadwal sholat
 
-- `src/lib/prayer.ts` memakai library `adhan` (pure JS) — dijalankan di **client**, sehingga
-  TV Display tetap akurat tanpa koneksi internet setelah halaman termuat.
+- `src/lib/prayer.ts` memakai library `adhan` (pure JS) — dijalankan di **client** untuk hitung mundur real-time.
 - Tanggal kalender diambil di zona waktu masjid (`tenants.timezone`: WIB/WITA/WIT), bukan zona server.
 - Metode default **KEMENAG**: Subuh −20°, Isya −18°, ihtiyat ±2 menit, pembulatan ke atas.
-
-## Fase layar TV
-
-```
-adzan masuk ──4 mnt──▶ ADZAN ──▶ IQOMAH (countdown hingga offset) ──12 mnt──▶ SHOLAT ──▶ NORMAL
-Jumat (dzuhur):        ADZAN ──▶ KHUTBAH (45 + 12 mnt) ──▶ NORMAL
-```
 
 ## Penyimpanan file
 
