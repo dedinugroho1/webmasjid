@@ -14,6 +14,7 @@ import { nextCookies } from "better-auth/next-js";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, sessions, users, verifications } from "@/db/schema";
+import { sendEmail } from "./email";
 
 export const auth = betterAuth({
   appName: "WebMasjid",
@@ -32,6 +33,22 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     autoSignIn: true,
+    resetPasswordTokenExpiresIn: 60 * 60, // 1 jam
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Atur ulang password WebMasjid",
+        text: [
+          `Assalamu'alaikum ${user.name},`,
+          "",
+          "Kami menerima permintaan untuk mengatur ulang password akun pengurus WebMasjid Anda.",
+          `Buka tautan berikut (berlaku 1 jam): ${url}`,
+          "",
+          "Abaikan email ini bila Anda tidak memintanya.",
+        ].join("\n"),
+      });
+    },
   },
   user: {
     additionalFields: {

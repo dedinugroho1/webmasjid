@@ -223,11 +223,37 @@ export const prayerSettings = pgTable(
   (t) => [uniqueIndex("prayer_settings_tenant_uidx").on(t.tenantId)],
 );
 
+// ─── Undangan Pengurus ──────────────────────────────────────────────────
+/**
+ * Link undangan untuk menambah pengurus (bendahara/admin) ke sebuah masjid.
+ * Hanya hash token yang disimpan; token mentah ditampilkan sekali ke admin.
+ */
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: id(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    role: userRoleEnum("role").notNull().default("BENDAHARA"),
+    /** Catatan untuk admin, mis. nama calon pengurus. */
+    note: text("note"),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    acceptedBy: text("accepted_by").references(() => users.id, { onDelete: "set null" }),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("invitations_token_uidx").on(t.tokenHash), index("invitations_tenant_idx").on(t.tenantId)],
+);
+
 // ─── Relations ──────────────────────────────────────────────────────────
 export const tenantsRelations = relations(tenants, ({ many, one }) => ({
   users: many(users),
   cashTransactions: many(cashTransactions),
   events: many(events),
+  invitations: many(invitations),
   prayerSettings: one(prayerSettings, {
     fields: [tenants.id],
     references: [prayerSettings.tenantId],
@@ -261,9 +287,14 @@ export const prayerSettingsRelations = relations(prayerSettings, ({ one }) => ({
   tenant: one(tenants, { fields: [prayerSettings.tenantId], references: [tenants.id] }),
 }));
 
+export const invitationsRelations = relations(invitations, ({ one }) => ({
+  tenant: one(tenants, { fields: [invitations.tenantId], references: [tenants.id] }),
+}));
+
 export type Tenant = typeof tenants.$inferSelect;
 export type NewTenant = typeof tenants.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type CashTransaction = typeof cashTransactions.$inferSelect;
 export type MasjidEvent = typeof events.$inferSelect;
 export type PrayerSetting = typeof prayerSettings.$inferSelect;
+export type Invitation = typeof invitations.$inferSelect;
