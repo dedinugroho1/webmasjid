@@ -8,6 +8,7 @@ import { APIError } from "better-auth/api";
 import { db } from "@/db";
 import { invitations, sessions, tenants, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { checkLimits, clientIp, LIMITS } from "@/lib/rate-limit";
 import { hashToken } from "@/lib/tokens";
 import type { FormState } from "../../actions";
 
@@ -42,6 +43,9 @@ async function bind(inv: { id: string; tenantId: string; role: "DKM_ADMIN" | "BE
 }
 
 export async function acceptInvitation(token: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const limited = await checkLimits([{ key: `invite:ip:${await clientIp()}`, rule: LIMITS.invitePerIp }]);
+  if (limited) return { error: limited };
+
   const session = await auth.api.getSession({ headers: await headers() });
 
   // Sudah login: gabungkan akun yang belum terikat masjid mana pun.
