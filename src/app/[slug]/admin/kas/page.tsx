@@ -1,4 +1,5 @@
-import { FileDown, Paperclip } from "lucide-react";
+import Link from "next/link";
+import { FileDown, Paperclip, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,7 +83,7 @@ export default async function KasPage({ params, searchParams }: Props) {
                   <TableHead>Kategori</TableHead>
                   <TableHead>Kas</TableHead>
                   <TableHead className="text-right">Nominal</TableHead>
-                  <TableHead className="w-10" />
+                  <TableHead className="w-20" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,7 +114,14 @@ export default async function KasPage({ params, searchParams }: Props) {
                       {formatRupiah(t.amount)}
                     </TableCell>
                     <TableCell>
-                      <DeleteButton action={deleteTransaction.bind(null, slug, t.id)} confirmText="Hapus transaksi ini?" />
+                      <div className="flex">
+                        <Button asChild variant="ghost" size="icon" aria-label="Edit">
+                          <Link href={`/${slug}/admin/kas/${t.id}`}>
+                            <Pencil />
+                          </Link>
+                        </Button>
+                        <DeleteButton action={deleteTransaction.bind(null, slug, t.id)} confirmText="Hapus transaksi ini?" />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
