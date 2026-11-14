@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BookOpenText,
   CalendarClock,
+  CalendarDays,
   CodeXml,
   HandHeart,
   Landmark,
@@ -10,7 +11,6 @@ import {
   QrCode,
   Server,
   ShieldCheck,
-  Tv,
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,9 +38,9 @@ const FEATURES = [
     desc: "Tampilkan QRIS dan rekening resmi DKM yang bisa diperbesar, diunduh, dan disalin. Memudahkan jamaah berinfaq dari mana saja.",
   },
   {
-    icon: Tv,
-    title: "TV Display Masjid",
-    desc: "Mode layar penuh untuk Smart TV / Android TV: jam besar, tanggal Hijriah, 6 waktu sholat, running text, dan layar iqomah otomatis.",
+    icon: CalendarDays,
+    title: "Agenda & Kajian",
+    desc: "Jadwal kajian rutin, petugas sholat Jumat (khatib & imam), dan kegiatan sosial masjid — selalu terbaru untuk jamaah.",
   },
 ];
 
@@ -72,7 +72,7 @@ export default async function LandingPage() {
             </h1>
             <p className="text-muted-foreground mx-auto max-w-2xl text-lg text-balance">
               WebMasjid membantu ribuan DKM memiliki website sendiri — buku kas terbuka, jadwal sholat otomatis, infaq
-              QRIS, hingga TV display — cukup di <b>webmasjid.com/nama-masjid</b>, atau host mandiri dari GitHub.
+              QRIS, hingga agenda kajian — cukup di <b>webmasjid.com/nama-masjid</b>, atau host mandiri dari GitHub.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild size="lg" variant="outline">
@@ -211,7 +211,7 @@ npm run dev   # → http://localhost:3000`}</code>
               <h2 className="text-3xl font-bold">Pengurus DKM tidak paham teknis? Kami bantu.</h2>
               <p className="max-w-2xl opacity-90">
                 Instalasi server mandiri, pemasangan domain sendiri (mis. masjidalikhlas.or.id), migrasi data kas lama,
-                hingga setup TV display di masjid. Biaya terjangkau, hasilnya untuk kemaslahatan jamaah.
+                hingga pelatihan pengurus. Biaya terjangkau, hasilnya untuk kemaslahatan jamaah.
               </p>
             </div>
             <Button asChild size="lg" variant="secondary">
