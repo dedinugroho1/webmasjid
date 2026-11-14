@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
 import { Loader2 } from "lucide-react";
 import { requestResetAction, resetPasswordAction } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Field } from "./field";
 
 export function RequestResetForm() {
-  const [state, action, pending] = useActionState(requestResetAction, null);
+  const [state, action, pending] = useActionForm(requestResetAction, null);
   if (state?.sent) {
     return (
       <p className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-900">
@@ -18,7 +18,7 @@ export function RequestResetForm() {
   }
   const fe = state?.fieldErrors;
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={action} className="grid gap-4">
       <Field label="Email akun pengurus" htmlFor="email" error={fe?.email}>
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </Field>
@@ -30,9 +30,9 @@ export function RequestResetForm() {
 }
 
 export function ResetPasswordForm({ token }: { token: string }) {
-  const [state, action, pending] = useActionState(resetPasswordAction, null);
+  const [state, action, pending] = useActionForm(resetPasswordAction, null);
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={action} className="grid gap-4">
       <input type="hidden" name="token" value={token} />
       <Field label="Password baru" htmlFor="newPassword" error={state?.fieldErrors?.newPassword}>
         <Input id="newPassword" name="newPassword" type="password" autoComplete="new-password" minLength={8} required />
