@@ -13,7 +13,7 @@ export const getTenantBySlug = cache(async (slug: string): Promise<Tenant | null
 
 export const getPrayerSettings = cache(async (tenantId: string) => {
   const [row] = await db.select().from(prayerSettings).where(eq(prayerSettings.tenantId, tenantId)).limit(1);
-  return row ?? { calculationMethod: "KEMENAG", iqomahOffsetMinutes: 10 };
+  return row ?? { calculationMethod: "KEMENAG", iqomahOffsetMinutes: 10, adjustments: {}, iqomahMinutes: {} };
 });
 
 /** Konfigurasi siap pakai untuk komponen jadwal sholat (server → client). */
@@ -25,6 +25,8 @@ export async function getPrayerConfig(tenant: Tenant) {
     timezone: tenant.timezone,
     method: settings.calculationMethod,
     iqomahOffsetMinutes: settings.iqomahOffsetMinutes,
+    adjustments: settings.adjustments,
+    iqomahMinutes: settings.iqomahMinutes,
   };
 }
 
