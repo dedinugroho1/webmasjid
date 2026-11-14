@@ -4,6 +4,8 @@ import {
   BookOpenText,
   CalendarClock,
   CalendarDays,
+  Mic,
+  Printer,
   CodeXml,
   HandHeart,
   Landmark,
@@ -24,23 +26,23 @@ export const dynamic = "force-dynamic";
 const FEATURES = [
   {
     icon: BookOpenText,
-    title: "Transparansi Buku Kas",
-    desc: "Bendahara mencatat pemasukan & pengeluaran, jamaah melihat saldo kas operasional dan pembangunan secara real-time. Laporan bulanan PDF 1-klik.",
+    title: "Buku Kas & Infaq Jumat",
+    desc: "Catat infaq Jumat, kotak amal, dan pengeluaran dari HP. Laporan kas Jumat siap dibacakan sebelum khutbah & dikirim ke grup WhatsApp.",
+  },
+  {
+    icon: Mic,
+    title: "Petugas Jumat & Kajian Rutin",
+    desc: "Jadwal khatib, imam, muadzin, dan pengajian mingguan — diisi sekali, langsung tampil untuk jamaah.",
   },
   {
     icon: CalendarClock,
     title: "Jadwal Sholat Otomatis",
-    desc: "Dihitung dari koordinat masjid dengan kriteria Kemenag RI, lengkap dengan hitung mundur adzan & iqomah — tanpa input manual.",
+    desc: "Sesuai lokasi masjid (kriteria Kemenag), bisa dikoreksi per menit agar sama dengan jadwal setempat.",
   },
   {
-    icon: QrCode,
-    title: "Infaq QRIS",
-    desc: "Tampilkan QRIS dan rekening resmi DKM yang bisa diperbesar, diunduh, dan disalin. Memudahkan jamaah berinfaq dari mana saja.",
-  },
-  {
-    icon: CalendarDays,
-    title: "Agenda & Kajian",
-    desc: "Jadwal kajian rutin, petugas sholat Jumat (khatib & imam), dan kegiatan sosial masjid — selalu terbaru untuk jamaah.",
+    icon: Printer,
+    title: "Cetak Papan Pengumuman",
+    desc: "Satu klik mencetak jadwal Jumat, kajian, jadwal sholat sebulan, dan saldo kas — siap ditempel di masjid.",
   },
 ];
 
@@ -68,11 +70,11 @@ export default async function LandingPage() {
               Open-source · Gratis · Amal Jariyah Digital
             </p>
             <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight text-balance md:text-6xl">
-              Website masjid yang <span className="text-primary">modern, transparan</span>, dan siap pakai dalam 5 menit
+              Website masjid yang <span className="text-primary">sederhana, transparan</span>, dan langsung terpakai
             </h1>
             <p className="text-muted-foreground mx-auto max-w-2xl text-lg text-balance">
-              WebMasjid membantu ribuan DKM memiliki website sendiri — buku kas terbuka, jadwal sholat otomatis, infaq
-              QRIS, hingga agenda kajian — cukup di <b>webmasjid.com/nama-masjid</b>, atau host mandiri dari GitHub.
+              Untuk masjid di desa maupun kota: catat kas & infaq Jumat dari HP, umumkan petugas Jumat dan kajian rutin,
+              tampilkan jadwal sholat — gratis di <b>webmasjid.com/nama-masjid</b>, atau host mandiri dari GitHub.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild size="lg" variant="outline">
