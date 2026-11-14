@@ -39,3 +39,11 @@ describe("format", () => {
     expect(monthRange("2026-12")).toEqual({ start: "2026-12-01", end: "2027-01-01" });
   });
 });
+
+describe("nama hari", () => {
+  it("memakai Ahad, bukan Minggu", async () => {
+    const { formatDate } = await import("@/lib/format");
+    expect(formatDate("2026-11-15", "UTC", { weekday: "long" })).toContain("Ahad");
+    expect(formatDate("2026-11-15", "UTC", { weekday: "short" })).toContain("Ahd");
+  });
+});
