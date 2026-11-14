@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
+import { databaseUrlUnpooled } from "./src/lib/env";
 
 export default defineConfig({
   schema: "./src/db/schema.ts",
@@ -7,7 +8,7 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     // Untuk migrasi gunakan koneksi langsung (non-pooled) bila tersedia.
-    url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? "",
+    url: databaseUrlUnpooled() ?? "",
   },
   strict: true,
   verbose: true,
