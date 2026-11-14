@@ -4,6 +4,8 @@
  *   npm run db:seed
  *
  * Akun demo: admin@webmasjid.test / demo12345 (ubah lewat env SEED_ADMIN_*).
+ * Opsional: SEED_SUPERADMIN_EMAIL membuat akun superadmin (password sama) —
+ * hanya untuk development/CI, JANGAN dipakai di produksi.
  * Aman dijalankan berulang — data demo lama untuk slug yang sama dihapus dulu.
  */
 import "dotenv/config";
@@ -15,6 +17,7 @@ import { accounts, cashTransactions, events, prayerSettings, tenants, users } fr
 const SLUG = "al-ikhlas";
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@webmasjid.test";
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "demo12345";
+const SUPERADMIN_EMAIL = process.env.SEED_SUPERADMIN_EMAIL;
 
 function isoDaysAgo(days: number) {
   const d = new Date(Date.now() - days * 86_400_000);
@@ -27,6 +30,7 @@ async function main() {
   console.log("🧹 Menghapus data demo lama…");
   await db.delete(tenants).where(eq(tenants.slug, SLUG));
   await db.delete(users).where(eq(users.email, ADMIN_EMAIL));
+  if (SUPERADMIN_EMAIL) await db.delete(users).where(eq(users.email, SUPERADMIN_EMAIL));
 
   console.log("🕌 Membuat Masjid Al-Ikhlas…");
   const [tenant] = await db
@@ -70,6 +74,19 @@ async function main() {
     userId,
     password: await hashPassword(ADMIN_PASSWORD),
   });
+
+  if (SUPERADMIN_EMAIL) {
+    console.log("🛡️  Membuat superadmin (development)…");
+    const superId = crypto.randomUUID();
+    await db.insert(users).values({ id: superId, name: "Superadmin", email: SUPERADMIN_EMAIL, emailVerified: true, role: "SUPERADMIN" });
+    await db.insert(accounts).values({
+      id: crypto.randomUUID(),
+      accountId: superId,
+      providerId: "credential",
+      userId: superId,
+      password: await hashPassword(ADMIN_PASSWORD),
+    });
+  }
 
   console.log("💰 Mengisi buku kas…");
   const tx: (typeof cashTransactions.$inferInsert)[] = [];
