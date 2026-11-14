@@ -93,7 +93,7 @@ export default async function MasjidPage({ params }: Props) {
           <PrayerWidget config={prayerConfig} />
           <p className="text-muted-foreground mt-2 text-xs">
             Jadwal dihitung otomatis untuk koordinat masjid ({prayerConfig.latitude.toFixed(4)},{" "}
-            {prayerConfig.longitude.toFixed(4)}). Iqomah ±{prayerConfig.iqomahOffsetMinutes} menit setelah adzan.
+            {prayerConfig.longitude.toFixed(4)}), disesuaikan oleh pengurus DKM.
           </p>
         </section>
 
