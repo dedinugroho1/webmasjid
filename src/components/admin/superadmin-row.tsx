@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useState, useTransition} from "react";
 import Link from "next/link";
 import { Ban, Check, Eye, EyeOff, Loader2, LayoutDashboard, RotateCcw } from "lucide-react";
 import type { SlugState } from "@/app/superadmin/actions";
@@ -32,7 +33,7 @@ type Props = {
 export function SuperadminRow({ row, onPublish, onSuspend, onUnsuspend, onChangeSlug }: Props) {
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState(false);
-  const [slugState, slugAction, slugPending] = useActionState(onChangeSlug, null);
+  const [slugState, slugAction, slugPending] = useActionForm(onChangeSlug, null);
 
   return (
     <li className="grid gap-2 py-3" data-testid={`tenant-${row.slug}`}>
@@ -90,7 +91,7 @@ export function SuperadminRow({ row, onPublish, onSuspend, onUnsuspend, onChange
         </div>
       </div>
       {editing && (
-        <form action={slugAction} className="flex flex-wrap items-center gap-2">
+        <form onSubmit={slugAction} className="flex flex-wrap items-center gap-2">
           <span className="text-muted-foreground text-sm">/</span>
           <Input name="slug" defaultValue={row.slug} className="h-8 w-56" aria-label={`Slug baru ${row.name}`} />
           <Button type="submit" size="sm" disabled={slugPending}>
