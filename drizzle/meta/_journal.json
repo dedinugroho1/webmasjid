@@ -50,6 +50,13 @@
       "when": 1794635123190,
       "tag": "0006_announcements_gallery",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794637277847,
+      "tag": "0007_jumat_kajian_rutin",
+      "breakpoints": true
     }
   ]
 }

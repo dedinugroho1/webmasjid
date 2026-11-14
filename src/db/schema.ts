@@ -217,6 +217,62 @@ export const events = pgTable(
   (t) => [index("events_tenant_date_idx").on(t.tenantId, t.dateTime)],
 );
 
+// ─── Jadwal Petugas Jumat ───────────────────────────────────────────────
+export const jumatSchedules = pgTable(
+  "jumat_schedules",
+  {
+    id: id(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    /** Tanggal Jumat (YYYY-MM-DD). */
+    date: date("date", { mode: "string" }).notNull(),
+    khatib: text("khatib"),
+    imam: text("imam"),
+    muadzin: text("muadzin"),
+    /** Tema khutbah (opsional). */
+    theme: text("theme"),
+    notes: text("notes"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("jumat_tenant_date_uidx").on(t.tenantId, t.date)],
+);
+
+// ─── Kajian Rutin ───────────────────────────────────────────────────────
+export const kajianFrequencyEnum = pgEnum("kajian_frequency", [
+  "SETIAP_PEKAN",
+  "PEKAN_1_3",
+  "PEKAN_2_4",
+  "SEBULAN_SEKALI",
+]);
+export type KajianFrequency = (typeof kajianFrequencyEnum.enumValues)[number];
+
+/** Jadwal kajian yang berulang (mis. setiap Ahad ba'da Subuh). */
+export const routineKajian = pgTable(
+  "routine_kajian",
+  {
+    id: id(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    /** 0 = Ahad, 1 = Senin, … 6 = Sabtu. */
+    dayOfWeek: integer("day_of_week").notNull(),
+    /** Waktu bebas: "Ba'da Subuh", "Ba'da Maghrib", "16.00". */
+    time: text("time").notNull(),
+    title: text("title").notNull(),
+    ustadz: text("ustadz"),
+    frequency: kajianFrequencyEnum("frequency").notNull().default("SETIAP_PEKAN"),
+    /** Peserta/sasaran, mis. "Umum", "Ibu-ibu", "Remaja". */
+    audience: text("audience"),
+    location: text("location"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("routine_kajian_tenant_idx").on(t.tenantId, t.dayOfWeek)],
+);
+
 // ─── Pengumuman ─────────────────────────────────────────────────────────
 export const announcements = pgTable(
   "announcements",
@@ -320,6 +376,8 @@ export const tenantsRelations = relations(tenants, ({ many, one }) => ({
   events: many(events),
   invitations: many(invitations),
   announcements: many(announcements),
+  jumatSchedules: many(jumatSchedules),
+  routineKajian: many(routineKajian),
   galleryItems: many(galleryItems),
   prayerSettings: one(prayerSettings, {
     fields: [tenants.id],
@@ -366,4 +424,6 @@ export type MasjidEvent = typeof events.$inferSelect;
 export type PrayerSetting = typeof prayerSettings.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
+export type JumatSchedule = typeof jumatSchedules.$inferSelect;
+export type RoutineKajian = typeof routineKajian.$inferSelect;
 export type GalleryItem = typeof galleryItems.$inferSelect;
