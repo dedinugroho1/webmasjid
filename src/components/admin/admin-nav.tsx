@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpenText, CalendarDays, ExternalLink, LayoutDashboard, LogOut, Settings, Tv } from "lucide-react";
+import { BookOpenText, CalendarDays, ExternalLink, LayoutDashboard, LogOut, Settings } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -41,9 +41,6 @@ export function AdminNav({ slug, canManage }: { slug: string; canManage: boolean
       <div className="hidden md:my-2 md:block md:border-t" />
       <Link href={`/${slug}`} target="_blank" className="hover:bg-accent flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm">
         <ExternalLink className="size-4" /> Lihat Situs
-      </Link>
-      <Link href={`/${slug}/tv`} target="_blank" className="hover:bg-accent flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm">
-        <Tv className="size-4" /> TV Display
       </Link>
       <button
         type="button"
