@@ -248,6 +248,18 @@ export const invitations = pgTable(
   (t) => [uniqueIndex("invitations_token_uidx").on(t.tokenHash), index("invitations_tenant_idx").on(t.tenantId)],
 );
 
+// ─── Rate limit ─────────────────────────────────────────────────────────
+/**
+ * Penghitung batas percobaan (login, daftar, reset password, dll.).
+ * Disimpan di database agar berlaku lintas instance serverless.
+ */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  /** Awal jendela waktu (epoch ms). */
+  windowStart: bigint("window_start", { mode: "number" }).notNull(),
+});
+
 // ─── Relations ──────────────────────────────────────────────────────────
 export const tenantsRelations = relations(tenants, ({ many, one }) => ({
   users: many(users),

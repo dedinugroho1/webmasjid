@@ -15,6 +15,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, sessions, users, verifications } from "@/db/schema";
 import { sendEmail } from "./email";
+import { consume } from "./rate-limit";
 
 export const auth = betterAuth({
   appName: "WebMasjid",
@@ -77,6 +78,21 @@ export const auth = betterAuth({
         },
       },
     },
+  },
+  // Batas percobaan untuk request langsung ke /api/auth/* (disimpan di DB agar
+  // berlaku lintas instance serverless). Server action memakai checkLimits().
+  rateLimit: {
+    enabled: process.env.RATE_LIMIT_DISABLED !== "true",
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 15 * 60, max: 10 },
+      "/sign-up/email": { window: 60 * 60, max: 5 },
+      "/request-password-reset": { window: 60 * 60, max: 5 },
+      "/reset-password": { window: 60 * 60, max: 10 },
+      "/change-password": { window: 15 * 60, max: 10 },
+    },
+    customStorage: { consume: (key, rule) => consume(`ba:${key}`, rule) },
   },
   // nextCookies() memastikan cookie sesi ter-set saat auth.api dipanggil dari Server Action.
   plugins: [nextCookies()],

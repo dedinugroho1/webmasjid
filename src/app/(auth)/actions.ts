@@ -10,6 +10,7 @@ import { prayerSettings, sessions, tenants, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { CITIES, DEFAULT_CITY } from "@/lib/cities";
 import { DEFAULT_RUNNING_TEXT } from "@/lib/constants";
+import { checkLimits, clientIp, LIMITS } from "@/lib/rate-limit";
 import { isValidSlug } from "@/lib/reserved-slugs";
 import { registrationOpen } from "@/lib/utils";
 
@@ -29,6 +30,13 @@ const signInSchema = z.object({
 export async function signInAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = signInSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+
+  const ip = await clientIp();
+  const limited = await checkLimits([
+    { key: `signin:ip:${ip}`, rule: LIMITS.signInPerIp },
+    { key: `signin:email:${parsed.data.email.toLowerCase()}`, rule: LIMITS.signInPerEmail },
+  ]);
+  if (limited) return { error: limited };
 
   let tenantId: string | null = null;
   try {
@@ -66,10 +74,15 @@ const registerSchema = z.object({
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
   if (!registrationOpen()) return { error: "Pendaftaran masjid baru sedang ditutup." };
+  // Honeypot: kolom tersembunyi yang hanya diisi bot.
+  if (formData.get("website")) return { error: "Pendaftaran gagal. Silakan coba lagi." };
 
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const data = parsed.data;
+
+  const limited = await checkLimits([{ key: `register:ip:${await clientIp()}`, rule: LIMITS.registerPerIp }]);
+  if (limited) return { error: limited };
 
   const [existing] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.slug, data.slug)).limit(1);
   if (existing) return { fieldErrors: { slug: ["Alamat ini sudah dipakai masjid lain"] } };
@@ -130,6 +143,12 @@ export type ResetRequestState = { sent?: boolean; fieldErrors?: Record<string, s
 export async function requestResetAction(_prev: ResetRequestState, formData: FormData): Promise<ResetRequestState> {
   const parsed = z.object({ email: z.email("Email tidak valid") }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const limited = await checkLimits([
+    { key: `reset:ip:${await clientIp()}`, rule: LIMITS.resetPerIp },
+    { key: `reset:email:${parsed.data.email.toLowerCase()}`, rule: LIMITS.resetPerEmail },
+  ]);
+  // Tetap tampilkan pesan generik agar tidak membocorkan status email.
+  if (limited) return { sent: true };
   try {
     await auth.api.requestPasswordReset({
       body: { email: parsed.data.email, redirectTo: "/reset-password" },

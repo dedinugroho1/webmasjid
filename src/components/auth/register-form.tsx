@@ -18,6 +18,13 @@ export function RegisterForm({ baseUrl }: { baseUrl: string }) {
 
   return (
     <form action={action} className="grid gap-4">
+      {/* Honeypot anti-bot: disembunyikan dari manusia & pembaca layar. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label>
+          Website
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
       <Field label="Nama Masjid" htmlFor="masjidName" error={state?.fieldErrors?.masjidName}>
         <Input
           id="masjidName"
