@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, HandCoins, Landmark, Mail, MapPin, Phone, Tv } from "lucide-react";
+import { CalendarDays, HandCoins, Landmark, Mail, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BankAccounts } from "@/components/masjid/bank-accounts";
@@ -82,11 +82,6 @@ export default async function MasjidPage({ params }: Props) {
               )}
             </div>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/${tenant.slug}/tv`} target="_blank">
-              <Tv /> Mode TV
-            </Link>
-          </Button>
         </div>
       </header>
 
