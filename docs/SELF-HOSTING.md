@@ -67,9 +67,13 @@ sesuai instruksi. Perbarui `BETTER_AUTH_URL` & `NEXT_PUBLIC_APP_URL` ke domain t
 
 ## Alternatif: Postgres selain Neon
 
-Kode memakai driver `@neondatabase/serverless` (WebSocket). Untuk Postgres biasa (VPS/Docker),
-ganti `src/db/index.ts` dengan driver `drizzle-orm/node-postgres` + paket `pg` — skema & query
-lainnya tidak perlu diubah.
+Set `DATABASE_DRIVER="pg"` untuk memakai Postgres biasa (VPS, Docker, Supabase, dll.) melalui
+driver `node-postgres`. Contoh cepat dengan Docker:
+
+```bash
+docker run -d --name webmasjid-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=webmasjid -p 5432:5432 postgres:16
+# .env → DATABASE_URL="postgresql://postgres:postgres@localhost:5432/webmasjid"  DATABASE_DRIVER="pg"
+```
 
 ## Butuh bantuan?
 
