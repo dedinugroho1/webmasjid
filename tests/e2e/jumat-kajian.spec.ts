@@ -55,7 +55,8 @@ test("kajian rutin: tambah, tampil di website, diliburkan, diedit", async ({ pag
 
   await page.goto(`/${slug}/admin/kajian`);
   await page.getByRole("button", { name: "Liburkan" }).click();
-  await expect(page.getByText("Libur")).toBeVisible();
+  await expect(page.getByText("Libur", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Aktifkan" })).toBeVisible();
   await page.goto(`/${slug}`);
   await expect(page.locator("section[aria-labelledby=kajian]")).not.toContainText("Bulughul Maram");
 

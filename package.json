@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "superadmin": "tsx scripts/make-superadmin.ts",
-    "vercel-build": "drizzle-kit migrate && tsx scripts/deploy-setup.ts && next build"
+    "vercel-build": "tsx scripts/vercel-build.ts"
   },
   "engines": {
     "node": ">=20.9"
