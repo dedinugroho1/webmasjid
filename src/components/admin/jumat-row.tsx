@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
 import { Check, Loader2, Save } from "lucide-react";
 import type { JumatState } from "@/app/[slug]/admin/jumat/actions";
 import { Button } from "@/components/ui/button";
@@ -16,10 +16,10 @@ type Props = {
 };
 
 export function JumatRow({ label, isNext, initial, action }: Props) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   return (
     <form
-      action={formAction}
+      onSubmit={formAction}
       className={`grid gap-2 rounded-lg border p-3 lg:grid-cols-[170px_1fr_1fr_1fr_1.3fr_auto] lg:items-center ${
         isNext ? "border-primary/40 bg-primary/5" : "bg-card"
       }`}
