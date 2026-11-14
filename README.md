@@ -19,7 +19,6 @@ Proyek amal jariyah digital: ribuan masjid bisa memiliki website sendiri di satu
 | --- | --- |
 | 📒 **Buku Kas Transparan** | Catat pemasukan/pengeluaran untuk **kas operasional** & **kas pembangunan**, lampirkan bukti, tampil terbuka di website. Laporan bulanan **PDF 1-klik** siap tempel di papan pengumuman. |
 | 🕰️ **Jadwal Sholat Otomatis** | Dihitung dari koordinat masjid (kriteria Kemenag RI & metode lain), hitung mundur adzan & iqomah. Tanpa API eksternal. |
-| 📺 **TV Display** | `/{slug}/tv` — jam besar, tanggal Masehi & Hijriah, 6 waktu sholat, running text, layar adzan → iqomah → sholat otomatis, mode khutbah Jumat. |
 | 💳 **Infaq Digital** | QRIS masjid (perbesar/unduh) + daftar rekening resmi dengan tombol salin. |
 | 📅 **Agenda & Kajian** | Jadwal kajian, petugas Jumat (khatib & imam), kegiatan sosial. |
 | 🏢 **Multi-tenant** | Satu instance melayani banyak masjid. Setiap sesi admin terikat ke masjidnya (`sessions.tenant_id`). |
@@ -48,12 +47,11 @@ webmasjid/
     │   ├── api/auth/[...all]/   # Route handler Better Auth
     │   └── [slug]/              # ── TENANT (masjid) ──
     │       ├── page.tsx         # Website publik masjid
-    │       ├── tv/page.tsx      # Mode TV Display
     │       └── admin/           # Dashboard DKM (dilindungi)
     │           ├── page.tsx     # Ringkasan
     │           ├── kas/         # Buku kas + laporan/route.ts (PDF)
     │           ├── agenda/      # Agenda & kajian
-    │           └── pengaturan/  # Profil, lokasi, QRIS, running text
+    │           └── pengaturan/  # Profil, lokasi, QRIS, rekening
     ├── components/
     │   ├── ui/                  # shadcn/ui
     │   ├── landing/ masjid/ admin/ auth/
@@ -115,7 +113,7 @@ Panduan deploy lengkap (Vercel + Neon, domain sendiri): **[docs/SELF-HOSTING.md]
 - [ ] Custom domain per masjid (`masjidku.or.id` → tenant)
 - [ ] Penyesuaian menit per waktu sholat (koreksi jadwal lokal)
 - [ ] Galeri kegiatan & pengumuman
-- [ ] PWA / mode offline untuk TV Display
+- [ ] TV Display masjid (sementara dinonaktifkan; kolom `tenants.running_text` tetap disimpan)
 
 ## 🤝 Kontribusi
 
