@@ -13,6 +13,7 @@ import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import ws from "ws";
+import { databaseUrl } from "../lib/env";
 import * as schema from "./schema";
 
 // Node.js < 22 belum punya WebSocket global; `ws` aman dipakai di semua versi.
@@ -21,7 +22,7 @@ neonConfig.webSocketConstructor = ws;
 type Database = ReturnType<typeof drizzleNeon<typeof schema>>;
 
 function createDb(): Database {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = databaseUrl();
   if (process.env.DATABASE_DRIVER === "pg") {
     const pool = new pg.Pool({ connectionString, max: 10 });
     // API query & transaksi Drizzle sama untuk kedua driver.
