@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarDays, HandCoins, Images, Landmark, Mail, MapPin, Megaphone, Phone } from "lucide-react";
+import { BookMarked, CalendarDays, HandCoins, Images, Landmark, Mail, MapPin, Megaphone, Mic, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnnouncementList } from "@/components/masjid/announcement-list";
@@ -8,10 +8,23 @@ import { BankAccounts } from "@/components/masjid/bank-accounts";
 import { CashSummary } from "@/components/masjid/cash-summary";
 import { EventList } from "@/components/masjid/event-list";
 import { GalleryGrid } from "@/components/masjid/gallery-grid";
+import { JumatCard } from "@/components/masjid/jumat-card";
+import { JumatReportCard } from "@/components/masjid/jumat-report-card";
+import { KajianList } from "@/components/masjid/kajian-list";
 import { PrayerWidget } from "@/components/masjid/prayer-widget";
 import { QrisCard } from "@/components/masjid/qris-card";
-import { getBalances, listTransactions } from "@/lib/finance";
-import { getActiveAnnouncements, getGallery, getPrayerConfig, getPublicTenantBySlug, getUpcomingEvents } from "@/lib/tenant";
+import { getBalances, getJumatReport, listTransactions } from "@/lib/finance";
+import { todayISO } from "@/lib/format";
+import { fridayOnOrBefore, upcomingFridays } from "@/lib/jumat";
+import {
+  getActiveAnnouncements,
+  getActiveKajian,
+  getGallery,
+  getJumatSchedules,
+  getPrayerConfig,
+  getPublicTenantBySlug,
+  getUpcomingEvents,
+} from "@/lib/tenant";
 import { appUrl } from "@/lib/utils";
 
 // Data kas & agenda selalu segar; halaman dirender per permintaan.
@@ -37,13 +50,18 @@ export default async function MasjidPage({ params }: Props) {
   const tenant = await getPublicTenantBySlug(slug);
   if (!tenant) notFound();
 
-  const [prayerConfig, balances, recent, upcoming, news, gallery] = await Promise.all([
+  const today = todayISO(tenant.timezone);
+  const fridays = upcomingFridays(tenant.timezone, 4);
+  const [prayerConfig, balances, recent, upcoming, news, gallery, jumat, kajian, jumatReport] = await Promise.all([
     getPrayerConfig(tenant),
     getBalances(tenant.id),
     listTransactions(tenant.id, { limit: 10 }),
     getUpcomingEvents(tenant.id, 8),
     getActiveAnnouncements(tenant.id, 5),
     getGallery(tenant.id, 12),
+    getJumatSchedules(tenant.id, fridays),
+    getActiveKajian(tenant.id),
+    getJumatReport(tenant.id, fridayOnOrBefore(today)),
   ]);
 
   return (
@@ -108,8 +126,20 @@ export default async function MasjidPage({ params }: Props) {
           </p>
         </section>
 
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
+          <section aria-labelledby="jumat" className="grid content-start gap-4">
+            <SectionTitle id="jumat" icon={<Mic />} title="Sholat Jumat" />
+            <JumatCard fridays={fridays} schedules={jumat} />
+          </section>
+          <section aria-labelledby="kajian" className="grid content-start gap-4">
+            <SectionTitle id="kajian" icon={<BookMarked />} title="Kajian Rutin" />
+            <KajianList items={kajian} today={today} />
+          </section>
+        </div>
+
         <section aria-labelledby="kas" className="grid gap-4">
           <SectionTitle id="kas" icon={<HandCoins />} title="Transparansi Kas Masjid" />
+          <JumatReportCard report={jumatReport} />
           <CashSummary balances={balances} recent={recent} />
         </section>
 
@@ -133,7 +163,7 @@ export default async function MasjidPage({ params }: Props) {
           </section>
 
           <section aria-labelledby="agenda" className="grid content-start gap-4">
-            <SectionTitle id="agenda" icon={<CalendarDays />} title="Agenda & Kajian" />
+            <SectionTitle id="agenda" icon={<CalendarDays />} title="Agenda Kegiatan" />
             <EventList events={upcoming} timeZone={tenant.timezone} />
           </section>
         </div>
