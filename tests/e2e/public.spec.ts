@@ -11,7 +11,9 @@ test("halaman publik masjid: jadwal, kas, infaq, agenda", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Masjid Al-Ikhlas" })).toBeVisible();
   await expect(page.getByText("Kas Operasional").first()).toBeVisible();
   await expect(page.getByText("Subuh").first()).toBeVisible();
-  await expect(page.getByText("Agenda & Kajian")).toBeVisible();
+  await expect(page.getByText("Agenda Kegiatan")).toBeVisible();
+  await expect(page.getByText("Sholat Jumat").first()).toBeVisible();
+  await expect(page.getByText("Kajian Rutin").first()).toBeVisible();
   await expect(page.getByText("7123 4567 89")).toBeVisible();
 });
 
