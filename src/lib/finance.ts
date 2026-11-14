@@ -2,6 +2,8 @@ import "server-only";
 import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { cashTransactions, type CashFund } from "@/db/schema";
+import { jumatWeek } from "./jumat";
+import { buildJumatReport } from "./jumat-report";
 
 export type FundSummary = Record<CashFund, { income: number; expense: number; balance: number }>;
 
@@ -91,4 +93,24 @@ export async function getMonthlyReport(tenantId: string, ym: string) {
   }));
 
   return { month: ym, funds, transactions };
+}
+
+/** Laporan kas pekan Sabtu–Jumat untuk `friday` (YYYY-MM-DD). */
+export async function getJumatReport(tenantId: string, friday: string) {
+  const { start, end } = jumatWeek(friday);
+  const [opening, weekTxs] = await Promise.all([
+    aggregate(tenantId, undefined, start),
+    db
+      .select()
+      .from(cashTransactions)
+      .where(
+        and(
+          eq(cashTransactions.tenantId, tenantId),
+          gte(cashTransactions.transactionDate, start),
+          lt(cashTransactions.transactionDate, end),
+        ),
+      )
+      .orderBy(asc(cashTransactions.transactionDate)),
+  ]);
+  return buildJumatReport(friday, start, { OPERASIONAL: opening.OPERASIONAL.balance, PEMBANGUNAN: opening.PEMBANGUNAN.balance }, weekTxs);
 }
