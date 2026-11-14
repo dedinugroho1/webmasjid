@@ -8,7 +8,7 @@
  * hanya untuk development/CI, JANGAN dipakai di produksi.
  * Aman dijalankan berulang — data demo lama untuk slug yang sama dihapus dulu.
  */
-import "dotenv/config";
+import "./load-env";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "../src/db";
