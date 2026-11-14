@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { CITIES } from "@/lib/cities";
+import { appUrl } from "@/lib/utils";
 import { TIMEZONES } from "@/lib/constants";
 import { CALCULATION_METHODS, type PrayerKey } from "@/lib/prayer";
 import { PrayerTuning } from "./prayer-tuning";
@@ -39,7 +40,7 @@ export function SettingsForm({
     timezone: tenant.timezone,
   });
   const [method, setMethod] = useState(prayer.calculationMethod);
-  const host = (process.env.NEXT_PUBLIC_APP_URL ?? "webmasjid.com").replace(/^https?:\/\//, "");
+  const host = appUrl().replace(/^https?:\/\//, "");
   const cnameTarget = process.env.NEXT_PUBLIC_CUSTOM_DOMAIN_TARGET || host;
   const fe = state?.fieldErrors;
 
