@@ -1,0 +1,2 @@
+ALTER TABLE "prayer_settings" ADD COLUMN "adjustments" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "prayer_settings" ADD COLUMN "iqomah_minutes" jsonb DEFAULT '{}'::jsonb NOT NULL;
