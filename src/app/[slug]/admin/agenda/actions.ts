@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
@@ -34,6 +35,32 @@ export async function createEvent(slug: string, _prev: EventFormState, formData:
   });
   revalidatePath(`/${slug}`, "layout");
   return { ok: true };
+}
+
+export async function updateEvent(slug: string, id: string, _prev: EventFormState, formData: FormData): Promise<EventFormState> {
+  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const raw = Object.fromEntries([...formData.entries()].filter(([, v]) => v !== ""));
+  const parsed = eventSchema.safeParse(raw);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+
+  const { dateTime, ...rest } = parsed.data;
+  const updated = await db
+    .update(events)
+    .set({
+      // Kolom opsional yang dikosongkan harus menjadi null, bukan dibiarkan.
+      speaker: null,
+      imam: null,
+      location: null,
+      description: null,
+      ...rest,
+      dateTime: localInputToDate(dateTime, tenant.timezone),
+    })
+    .where(and(eq(events.id, id), eq(events.tenantId, tenant.id)))
+    .returning({ id: events.id });
+  if (!updated.length) return { error: "Agenda tidak ditemukan." };
+
+  revalidatePath(`/${slug}`, "layout");
+  redirect(`/${slug}/admin/agenda`);
 }
 
 export async function deleteEvent(slug: string, id: string) {
