@@ -54,6 +54,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/webmasjid
       DATABASE_DRIVER: pg
+      SEED_SUPERADMIN_EMAIL: superadmin@webmasjid.test
       BETTER_AUTH_SECRET: ci-secret-not-for-production-0123456789abcdef
       BETTER_AUTH_URL: http://localhost:3100
       NEXT_PUBLIC_APP_URL: http://localhost:3100
