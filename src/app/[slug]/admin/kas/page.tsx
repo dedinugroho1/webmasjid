@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileDown, Paperclip, Pencil } from "lucide-react";
+import { FileDown, Megaphone, Paperclip, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,14 +10,15 @@ import { TransactionForm } from "@/components/admin/transaction-form";
 import { FUND_LABELS } from "@/lib/constants";
 import { getMonthlyReport } from "@/lib/finance";
 import { currentMonth, formatDate, formatRupiah, monthLabel, todayISO } from "@/lib/format";
+import { fridayOnOrBefore } from "@/lib/jumat";
 import { requireTenantAccess } from "@/lib/session";
 import { createTransaction, deleteTransaction } from "./actions";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ bulan?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ bulan?: string; catat?: string }> };
 
 export default async function KasPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { bulan } = await searchParams;
+  const { bulan, catat } = await searchParams;
   const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN", "BENDAHARA"]);
   const month = bulan && /^\d{4}-\d{2}$/.test(bulan) ? bulan : currentMonth(tenant.timezone);
   const report = await getMonthlyReport(tenant.id, month);
@@ -29,14 +30,19 @@ export default async function KasPage({ params, searchParams }: Props) {
           <h1 className="text-2xl font-bold">Buku Kas Digital</h1>
           <p className="text-muted-foreground text-sm">Catat pemasukan & pengeluaran — otomatis tampil transparan di website.</p>
         </div>
-        <form className="flex items-center gap-2" method="GET">
+        <form className="flex flex-wrap items-center gap-2" method="GET">
           <Input type="month" name="bulan" defaultValue={month} className="w-auto" />
           <Button type="submit" variant="outline">
             Tampilkan
           </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${slug}/admin/kas/jumat`}>
+              <Megaphone /> Laporan Jumat
+            </Link>
+          </Button>
           <Button asChild>
             <a href={`/${slug}/admin/kas/laporan?bulan=${month}`} target="_blank" rel="noreferrer">
-              <FileDown /> Cetak Laporan PDF
+              <FileDown /> PDF Bulanan
             </a>
           </Button>
         </form>
@@ -66,7 +72,16 @@ export default async function KasPage({ params, searchParams }: Props) {
             <CardTitle>Catat Transaksi</CardTitle>
           </CardHeader>
           <CardContent>
-            <TransactionForm action={createTransaction.bind(null, slug)} today={todayISO(tenant.timezone)} />
+            <TransactionForm
+              key={catat ?? "biasa"}
+              action={createTransaction.bind(null, slug)}
+              today={todayISO(tenant.timezone)}
+              defaults={
+                catat === "infaq-jumat"
+                  ? { category: "Infaq Jumat", transactionDate: fridayOnOrBefore(todayISO(tenant.timezone)) }
+                  : undefined
+              }
+            />
           </CardContent>
         </Card>
 
