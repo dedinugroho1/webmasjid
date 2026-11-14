@@ -217,6 +217,44 @@ export const events = pgTable(
   (t) => [index("events_tenant_date_idx").on(t.tenantId, t.dateTime)],
 );
 
+// ─── Pengumuman ─────────────────────────────────────────────────────────
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: id(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    /** Disematkan di urutan teratas. */
+    isPinned: boolean("is_pinned").notNull().default(false),
+    /** Opsional: setelah waktu ini pengumuman tidak tampil di halaman publik. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("announcements_tenant_idx").on(t.tenantId, t.createdAt)],
+);
+
+// ─── Galeri Kegiatan ────────────────────────────────────────────────────
+export const galleryItems = pgTable(
+  "gallery_items",
+  {
+    id: id(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    imageUrl: text("image_url").notNull(),
+    caption: text("caption"),
+    takenAt: date("taken_at", { mode: "string" }),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("gallery_tenant_idx").on(t.tenantId, t.createdAt)],
+);
+
 // ─── Pengaturan Jadwal Sholat ───────────────────────────────────────────
 export const prayerSettings = pgTable(
   "prayer_settings",
@@ -281,6 +319,8 @@ export const tenantsRelations = relations(tenants, ({ many, one }) => ({
   cashTransactions: many(cashTransactions),
   events: many(events),
   invitations: many(invitations),
+  announcements: many(announcements),
+  galleryItems: many(galleryItems),
   prayerSettings: one(prayerSettings, {
     fields: [tenants.id],
     references: [prayerSettings.tenantId],
@@ -325,3 +365,5 @@ export type CashTransaction = typeof cashTransactions.$inferSelect;
 export type MasjidEvent = typeof events.$inferSelect;
 export type PrayerSetting = typeof prayerSettings.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;
+export type Announcement = typeof announcements.$inferSelect;
+export type GalleryItem = typeof galleryItems.$inferSelect;

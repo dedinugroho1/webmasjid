@@ -43,6 +43,13 @@
       "when": 1794634465691,
       "tag": "0005_custom_domain",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794635123190,
+      "tag": "0006_announcements_gallery",
+      "breakpoints": true
     }
   ]
 }
