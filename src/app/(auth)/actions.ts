@@ -39,10 +39,16 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   if (limited) return { error: limited };
 
   let tenantId: string | null = null;
+  let role: string | null = null;
   try {
     const res = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
-    const [u] = await db.select({ tenantId: users.tenantId }).from(users).where(eq(users.id, res.user.id)).limit(1);
+    const [u] = await db
+      .select({ tenantId: users.tenantId, role: users.role })
+      .from(users)
+      .where(eq(users.id, res.user.id))
+      .limit(1);
     tenantId = u?.tenantId ?? null;
+    role = u?.role ?? null;
   } catch (e) {
     if (e instanceof APIError) return { error: "Email atau password salah." };
     throw e;
@@ -50,6 +56,7 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
 
   const next = safeNext(formData.get("next"));
   if (next) redirect(next);
+  if (role === "SUPERADMIN") redirect("/superadmin");
   if (tenantId) {
     const [t] = await db.select({ slug: tenants.slug }).from(tenants).where(eq(tenants.id, tenantId)).limit(1);
     if (t) redirect(`/${t.slug}/admin`);
