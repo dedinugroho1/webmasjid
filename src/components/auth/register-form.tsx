@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useState} from "react";
 import { Loader2 } from "lucide-react";
 import { registerAction } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,13 @@ import { slugify } from "@/lib/utils";
 import { Field } from "./field";
 
 export function RegisterForm({ baseUrl }: { baseUrl: string }) {
-  const [state, action, pending] = useActionState(registerAction, null);
+  const [state, action, pending] = useActionForm(registerAction, null);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const host = baseUrl.replace(/^https?:\/\//, "");
 
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={action} className="grid gap-4">
       {/* Honeypot anti-bot: disembunyikan dari manusia & pembaca layar. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
