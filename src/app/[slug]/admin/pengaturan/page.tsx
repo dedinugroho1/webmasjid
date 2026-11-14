@@ -17,7 +17,12 @@ export default async function PengaturanPage({ params }: { params: Promise<{ slu
       <SettingsForm
         action={updateSettings.bind(null, slug)}
         tenant={tenant}
-        prayer={{ calculationMethod: prayer.calculationMethod, iqomahOffsetMinutes: prayer.iqomahOffsetMinutes }}
+        prayer={{
+          calculationMethod: prayer.calculationMethod,
+          iqomahOffsetMinutes: prayer.iqomahOffsetMinutes,
+          adjustments: prayer.adjustments,
+          iqomahMinutes: prayer.iqomahMinutes,
+        }}
       />
     </div>
   );
