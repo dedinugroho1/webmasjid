@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useEffect, useRef} from "react";
 import Link from "next/link";
 import { Loader2, Plus, Save } from "lucide-react";
 import type { AnnouncementState } from "@/app/[slug]/admin/pengumuman/actions";
@@ -14,7 +15,7 @@ type Action = (prev: AnnouncementState, formData: FormData) => Promise<Announcem
 export type AnnouncementInitial = { title: string; body: string; isPinned: boolean; expiresAt: string | null };
 
 export function AnnouncementForm({ action, initial, cancelHref }: { action: Action; initial?: AnnouncementInitial; cancelHref?: string }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state?.ok && !initial) ref.current?.reset();
@@ -22,7 +23,7 @@ export function AnnouncementForm({ action, initial, cancelHref }: { action: Acti
   const fe = state?.fieldErrors;
 
   return (
-    <form ref={ref} action={formAction} className="grid gap-4">
+    <form ref={ref} onSubmit={formAction} className="grid gap-4">
       <Field label="Judul" htmlFor="title" error={fe?.title}>
         <Input id="title" name="title" placeholder="mis. Pembagian Daging Qurban" defaultValue={initial?.title} required />
       </Field>
