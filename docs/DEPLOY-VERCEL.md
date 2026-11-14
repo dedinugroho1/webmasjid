@@ -55,8 +55,14 @@ Vercel otomatis mengisi `DATABASE_URL` dan `DATABASE_URL_UNPOOLED`.
 
 ## Troubleshooting
 
+Bila konfigurasi belum lengkap, build **tetap berhasil** dan situs menampilkan halaman
+**"Setup belum selesai"** yang menyebutkan apa yang kurang. Lengkapi lalu **Redeploy**.
+
 | Gejala | Penyebab & solusi |
 | --- | --- |
-| Build gagal di `drizzle-kit migrate` | `DATABASE_URL` belum diisi untuk environment tersebut (Production/Preview). |
-| Error 500 saat login/daftar | `BETTER_AUTH_SECRET` belum diisi, atau `BETTER_AUTH_URL` berisi URL yang berbeda dari yang dibuka. Kosongkan saja di Vercel. |
+| `404 DEPLOYMENT_NOT_FOUND` | Belum ada deployment yang berhasil (mis. deploy pertama saat import gagal). Buka **Deployments**, pilih deploy terbaru → **Redeploy**. |
+| Halaman "Setup belum selesai" — `DATABASE_URL` | Pasang Neon di **Storage** dan *Connect* ke proyek (Production & Preview), lalu Redeploy. Nama `POSTGRES_URL` juga diterima. |
+| Halaman "Setup belum selesai" — `BETTER_AUTH_SECRET` | Tambahkan di **Settings → Environment Variables** (min. 32 karakter), lalu Redeploy. |
+| "Tabel belum dibuat" | Env baru diisi setelah build terakhir — Redeploy agar migrasi berjalan. |
+| Log build: `Tidak bisa terhubung ke database` | `DATABASE_URL` salah/kedaluwarsa — salin ulang dari dashboard Neon. |
 | Foto gagal diunggah | Lebih dari 300 KB tanpa Vercel Blob — tambahkan Storage → Blob. |
