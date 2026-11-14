@@ -9,7 +9,7 @@ import { getSessionCookie } from "better-auth/cookies";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const segments = pathname.split("/").filter(Boolean);
-  const isAdmin = segments.length >= 2 && segments[1] === "admin";
+  const isAdmin = (segments.length >= 2 && segments[1] === "admin") || segments[0] === "superadmin";
 
   if (isAdmin && !getSessionCookie(request)) {
     const url = request.nextUrl.clone();
@@ -21,5 +21,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:slug/admin/:path*"],
+  matcher: ["/:slug/admin/:path*", "/superadmin/:path*"],
 };
