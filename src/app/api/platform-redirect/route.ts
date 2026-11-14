@@ -5,6 +5,8 @@
  * proxy karena Next.js menormalkan header Location menjadi relatif (host
  * dibandingkan memakai header Host), yang menyebabkan loop di domain sendiri.
  */
+import { appUrl } from "@/lib/utils";
+
 export const dynamic = "force-dynamic";
 
 export function GET(request: Request) {
@@ -12,7 +14,7 @@ export function GET(request: Request) {
   const to = request.headers.get("x-webmasjid-redirect-to") ?? "/";
   // Hanya path lokal — cegah open redirect.
   const path = to.startsWith("/") && !to.startsWith("//") ? to : "/";
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const base = appUrl();
   return new Response(null, {
     status: 307,
     headers: { Location: new URL(path, base).toString(), "Cache-Control": "no-store" },

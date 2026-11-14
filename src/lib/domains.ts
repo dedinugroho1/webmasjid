@@ -1,3 +1,5 @@
+import { trustedOrigins } from "./utils";
+
 /**
  * Utilitas domain: host platform vs domain sendiri milik masjid.
  * Dipakai oleh proxy (edge of request) dan form pengaturan.
@@ -19,7 +21,7 @@ export function normalizeDomain(input: string) {
 /** Host milik platform (domain utama, alias, localhost, preview Vercel). */
 export function platformHosts() {
   const hosts = new Set<string>(["localhost", "127.0.0.1"]);
-  for (const url of [process.env.NEXT_PUBLIC_APP_URL, process.env.BETTER_AUTH_URL]) {
+  for (const url of trustedOrigins()) {
     try {
       if (url) hosts.add(new URL(url).hostname);
     } catch {}

@@ -16,10 +16,13 @@ import { db } from "@/db";
 import { accounts, sessions, users, verifications } from "@/db/schema";
 import { sendEmail } from "./email";
 import { consume } from "./rate-limit";
+import { appUrl, trustedOrigins } from "./utils";
 
 export const auth = betterAuth({
   appName: "WebMasjid",
-  baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL,
+  baseURL: process.env.BETTER_AUTH_URL || appUrl(),
+  // Mengizinkan URL deployment/branch Vercel (preview) selain URL utama.
+  trustedOrigins: trustedOrigins(),
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",
