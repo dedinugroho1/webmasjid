@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useEffect, useRef, useState} from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
 import type { GalleryState } from "@/app/[slug]/admin/galeri/actions";
 import { Field } from "@/components/auth/field";
@@ -11,7 +12,7 @@ import { compressImage } from "@/lib/compress-image";
 type Action = (prev: GalleryState, formData: FormData) => Promise<GalleryState>;
 
 export function GalleryForm({ action, today }: { action: Action; today: string }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const [preview, setPreview] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -41,7 +42,7 @@ export function GalleryForm({ action, today }: { action: Action; today: string }
   }
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-4">
+    <form ref={formRef} onSubmit={formAction} className="grid gap-4">
       <Field label="Foto Kegiatan" htmlFor="image" error={state?.fieldErrors?.image} hint="Foto otomatis diperkecil sebelum diunggah.">
         <Input ref={fileRef} id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp" onChange={onFile} required />
       </Field>
