@@ -67,6 +67,8 @@ export const tenants = pgTable(
     name: text("name").notNull(),
     /** Dipakai di URL: webmasjid.com/{slug} */
     slug: text("slug").notNull(),
+    /** Domain sendiri (tanpa protokol), mis. "masjidalikhlas.or.id". */
+    customDomain: text("custom_domain"),
     description: text("description"),
     address: text("address"),
     city: text("city"),
@@ -90,7 +92,7 @@ export const tenants = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [uniqueIndex("tenants_slug_uidx").on(t.slug)],
+  (t) => [uniqueIndex("tenants_slug_uidx").on(t.slug), uniqueIndex("tenants_custom_domain_uidx").on(t.customDomain)],
 );
 
 // ─── Better Auth: users ─────────────────────────────────────────────────

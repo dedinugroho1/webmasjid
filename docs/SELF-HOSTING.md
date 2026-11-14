@@ -62,8 +62,19 @@ Buka `http://localhost:3000/daftar`, daftarkan masjid Anda, lalu kelola di `/{sl
 Di Vercel → Project → **Settings → Domains**, tambahkan `masjidku.or.id`, lalu atur DNS
 sesuai instruksi. Perbarui `BETTER_AUTH_URL` & `NEXT_PUBLIC_APP_URL` ke domain tersebut.
 
-> Untuk satu masjid, alamat websitenya tetap `masjidku.or.id/{slug}`. Bila ingin langsung di
-> root domain, tambahkan redirect `/` → `/{slug}` di `next.config.ts` (`redirects()`).
+### Domain sendiri per masjid
+
+Setiap masjid bisa memakai domain sendiri (mis. `masjidalikhlas.or.id`) yang langsung menampilkan
+website masjidnya, sementara login & dashboard tetap di domain utama:
+
+1. Pengurus mengisi **Pengaturan → Domain Sendiri** dan membuat record DNS **CNAME** ke domain
+   platform (atau nilai `NEXT_PUBLIC_CUSTOM_DOMAIN_TARGET`).
+2. Pengelola platform menambahkan domain tersebut di hosting (Vercel → Settings → Domains).
+3. Isi `PLATFORM_HOSTS` dengan semua host milik platform (mis. `webmasjid.com,www.webmasjid.com`)
+   agar tidak dianggap domain masjid.
+
+Untuk instance satu masjid, cukup isi domain utama sebagai `NEXT_PUBLIC_APP_URL` lalu atur domain
+sendiri masjid seperti di atas — pengunjung `masjidku.or.id` langsung melihat website masjid.
 
 ## Alternatif: Postgres selain Neon
 

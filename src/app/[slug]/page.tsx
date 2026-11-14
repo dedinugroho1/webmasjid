@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, HandCoins, Landmark, Mail, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { PrayerWidget } from "@/components/masjid/prayer-widget";
 import { QrisCard } from "@/components/masjid/qris-card";
 import { getBalances, listTransactions } from "@/lib/finance";
 import { getPrayerConfig, getPublicTenantBySlug, getUpcomingEvents } from "@/lib/tenant";
+import { appUrl } from "@/lib/utils";
 
 // Data kas & agenda selalu segar; halaman dirender per permintaan.
 export const dynamic = "force-dynamic";
@@ -130,9 +130,9 @@ export default async function MasjidPage({ params }: Props) {
 
       <footer className="text-muted-foreground border-t py-6 text-center text-xs">
         Website ini dibuat dengan{" "}
-        <Link href="/" className="text-primary font-medium hover:underline">
+        <a href={appUrl()} className="text-primary font-medium hover:underline">
           WebMasjid
-        </Link>{" "}
+        </a>{" "}
         — platform open-source amal jariyah digital.
       </footer>
     </div>

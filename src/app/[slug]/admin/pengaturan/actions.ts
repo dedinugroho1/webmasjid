@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { prayerSettings, tenants } from "@/db/schema";
 import { TIMEZONES } from "@/lib/constants";
+import { validateCustomDomain } from "@/lib/domains";
 import { CALCULATION_METHODS } from "@/lib/prayer";
 import { parseBankAccounts, parsePrayerTuning } from "@/lib/settings-parse";
 import { requireTenantAccess } from "@/lib/session";
@@ -48,6 +49,8 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
   const d = parsed.data;
   const tuning = parsePrayerTuning(formData);
   if (Object.keys(tuning.errors).length) return { fieldErrors: tuning.errors };
+  const domain = validateCustomDomain(String(formData.get("customDomain") ?? ""));
+  if (!domain.ok) return { fieldErrors: { customDomain: [domain.error] } };
 
   const images: Partial<Record<"logoUrl" | "qrisUrl" | "coverUrl", string | null>> = {};
   try {
@@ -62,6 +65,11 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
     }
   } catch (e) {
     return { error: (e as Error).message };
+  }
+
+  if (domain.domain) {
+    const [taken] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.customDomain, domain.domain)).limit(1);
+    if (taken && taken.id !== tenant.id) return { fieldErrors: { customDomain: ["Domain ini sudah dipakai masjid lain."] } };
   }
 
   await db.transaction(async (tx) => {
@@ -79,6 +87,7 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
         timezone: d.timezone,
         bankAccounts: parseBankAccounts(d.bankAccounts),
         isPublished: d.isPublished === "on",
+        customDomain: domain.domain,
         ...images,
       })
       .where(eq(tenants.id, tenant.id));
