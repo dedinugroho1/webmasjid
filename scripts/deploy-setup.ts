@@ -3,7 +3,7 @@
  * bila SEED_DEMO="true" dan masjid demo belum ada, isi data demo /al-ikhlas
  * agar deployment bisa langsung dicoba. Tidak menimpa data yang sudah ada.
  */
-import "dotenv/config";
+import "./load-env";
 import { eq } from "drizzle-orm";
 import { db } from "../src/db";
 import { tenants } from "../src/db/schema";
