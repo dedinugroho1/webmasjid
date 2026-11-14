@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Clock } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { formatDate, formatHijri, formatTime } from "@/lib/format";
-import { formatCountdown, getCurrentPrayer, getNextPrayer, getPrayerSchedule } from "@/lib/prayer";
+import { formatCountdown, getCurrentPrayer, getNextPrayer, getPrayerSchedule, iqomahFor, isFriday } from "@/lib/prayer";
 import type { PrayerClientConfig } from "@/lib/tenant";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,9 @@ export function PrayerWidget({ config }: { config: PrayerClientConfig }) {
 
   const next = getNextPrayer(config, now);
   const current = getCurrentPrayer(config, now);
-  const iqomahAt = current ? current.time.getTime() + config.iqomahOffsetMinutes * 60_000 : 0;
+  // Jumat siang: khutbah, tanpa hitung mundur iqomah.
+  const jumat = current?.key === "dzuhur" && isFriday(now, config.timezone);
+  const iqomahAt = current && !jumat ? current.time.getTime() + iqomahFor(config, current.key) * 60_000 : 0;
   const inIqomah = current && now.getTime() < iqomahAt;
 
   return (
