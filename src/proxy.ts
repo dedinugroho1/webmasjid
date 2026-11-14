@@ -13,6 +13,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { slugForDomain } from "@/lib/domain-lookup";
 import { isPlatformHost, normalizeDomain } from "@/lib/domains";
+import { getSetupProblem, setupPageHtml } from "@/lib/setup-status";
 
 /** Path yang selalu dilayani domain utama (auth, admin, API). */
 const REDIRECT_HEADER = "x-webmasjid-redirect-to";
@@ -35,6 +36,16 @@ function toMain(request: NextRequest, path: string, search = "") {
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  // Instance baru yang belum dikonfigurasi → tampilkan petunjuk setup, bukan error.
+  const problem = await getSetupProblem();
+  if (problem) {
+    return new NextResponse(setupPageHtml(problem), {
+      status: 503,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
+
   const host = normalizeDomain(request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "");
 
   if (host && !isPlatformHost(host)) {
