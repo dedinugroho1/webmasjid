@@ -151,16 +151,6 @@ export function SettingsForm({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Running Text TV Display</CardTitle>
-          <CardDescription>Pisahkan setiap pesan dengan baris baru atau tanda “|”.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea name="runningText" rows={4} defaultValue={tenant.runningText ?? ""} />
-        </CardContent>
-      </Card>
-
       {state?.error && <p className="text-destructive text-sm">{state.error}</p>}
       {fe && <p className="text-destructive text-sm">Periksa kembali isian yang ditandai.</p>}
       {state?.ok && <p className="text-sm text-emerald-700">Pengaturan tersimpan.</p>}

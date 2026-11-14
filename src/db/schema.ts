@@ -75,6 +75,7 @@ export const tenants = pgTable(
     coverUrl: text("cover_url"),
     qrisUrl: text("qris_url"),
     bankAccounts: jsonb("bank_accounts").$type<BankAccount[]>().notNull().default([]),
+    /** Pesan running text (fitur TV Display — sementara dinonaktifkan). */
     runningText: text("running_text"),
     /** Tampil di direktori publik webmasjid.com. */
     isPublished: boolean("is_published").notNull().default(true),

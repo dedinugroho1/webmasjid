@@ -35,7 +35,6 @@ const settingsSchema = z.object({
   timezone: z.enum(TIMEZONES.map((t) => t.value) as [string, ...string[]]),
   calculationMethod: z.enum(Object.keys(CALCULATION_METHODS) as [string, ...string[]]),
   iqomahOffsetMinutes: z.coerce.number().int().min(0).max(60),
-  runningText: optionalText(2000),
   bankAccounts: z.string().max(2000).optional(),
   isPublished: z.literal("on").optional(),
 });
@@ -86,7 +85,6 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
         latitude: d.latitude,
         longitude: d.longitude,
         timezone: d.timezone,
-        runningText: d.runningText,
         bankAccounts: parseBankAccounts(d.bankAccounts),
         isPublished: d.isPublished === "on",
         ...images,

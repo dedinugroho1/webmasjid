@@ -1,7 +1,6 @@
 /**
  * Perhitungan jadwal sholat berbasis koordinat (library `adhan`).
- * Dipakai di server maupun client (pure JS, tanpa API eksternal) sehingga
- * TV Display tetap berjalan walau internet masjid putus.
+ * Dipakai di server maupun client (pure JS, tanpa API eksternal).
  */
 import { CalculationMethod, CalculationParameters, Coordinates, Madhab, PrayerTimes, Rounding } from "adhan";
 import { zonedParts } from "./format";

@@ -65,13 +65,6 @@ sesuai instruksi. Perbarui `BETTER_AUTH_URL` & `NEXT_PUBLIC_APP_URL` ke domain t
 > Untuk satu masjid, alamat websitenya tetap `masjidku.or.id/{slug}`. Bila ingin langsung di
 > root domain, tambahkan redirect `/` → `/{slug}` di `next.config.ts` (`redirects()`).
 
-## 6. Pasang TV Display
-
-1. Di Smart TV / Android TV / STB, buka browser ke `https://domain-anda/{slug}/tv`.
-2. Arahkan kursor ke tengah atas layar dan tekan tombol **layar penuh**.
-3. Atur TV agar tidak sleep. Halaman memuat ulang data otomatis tiap 10 menit, dan jam/jadwal
-   tetap berjalan walau internet terputus.
-
 ## Alternatif: Postgres selain Neon
 
 Kode memakai driver `@neondatabase/serverless` (WebSocket). Untuk Postgres biasa (VPS/Docker),

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s · WebMasjid",
   },
   description:
-    "Platform open-source untuk website masjid: buku kas transparan, jadwal sholat otomatis, infaq QRIS, dan TV display masjid. Amal jariyah digital.",
+    "Platform open-source untuk website masjid: buku kas transparan, jadwal sholat otomatis, infaq QRIS, dan agenda kajian. Amal jariyah digital.",
   openGraph: { siteName: "WebMasjid", locale: "id_ID", type: "website" },
 };
 
