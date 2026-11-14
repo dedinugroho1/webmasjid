@@ -23,7 +23,16 @@ Di proyek Vercel: **Storage → Create Database → Neon (Serverless Postgres)**
 **Singapore** → **Connect** ke proyek ini untuk environment Production & Preview.
 Vercel otomatis mengisi `DATABASE_URL` dan `DATABASE_URL_UNPOOLED`.
 
-> Alternatif: buat project di <https://neon.tech> lalu isi kedua variabel itu manual.
+> **Sudah punya project di console.neon.tech?** Jangan buat database baru di Vercel. Buka project
+> Neon → **Connect** → pilih branch `production`, lalu salin ke Vercel → Settings → Environment Variables:
+> - `DATABASE_URL` = connection string **pooled** (host berakhiran `-pooler`) — untuk aplikasi
+> - `DATABASE_URL_UNPOOLED` = connection string **direct** (tanpa `-pooler`) — untuk migrasi
+>
+> Atau dari komputer: `neon env pull` menulis keduanya ke `.env.local`.
+
+Driver bawaan adalah `node-postgres` (`pg`) dengan `attachDatabasePool` dari `@vercel/functions`,
+sesuai rekomendasi Neon untuk Vercel Fluid compute. `DATABASE_DRIVER=neon` memakai
+`@neondatabase/serverless` (WebSocket/443) untuk lingkungan yang memblokir port 5432.
 
 ## 3. Environment Variables
 
