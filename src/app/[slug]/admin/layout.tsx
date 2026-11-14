@@ -18,8 +18,8 @@ export default async function AdminLayout({
   const canManage = user.role !== "BENDAHARA";
 
   return (
-    <div className="bg-muted/40 min-h-dvh">
-      <header className="bg-background sticky top-0 z-20 border-b">
+    <div className="bg-muted/40 min-h-dvh print:bg-white">
+      <header className="bg-background sticky top-0 z-20 border-b print:hidden">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4">
           <Link href={`/${tenant.slug}/admin`} className="flex min-w-0 items-center gap-2 font-semibold">
             <Landmark className="text-primary size-5 shrink-0" />
@@ -31,8 +31,8 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 md:grid-cols-[220px_1fr]">
-        <aside className="md:sticky md:top-20 md:self-start">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 md:grid-cols-[220px_minmax(0,1fr)] print:block print:p-0">
+        <aside className="min-w-0 md:sticky md:top-20 md:self-start print:hidden">
           <AdminNav slug={tenant.slug} canManage={canManage} />
         </aside>
         <main className="min-w-0">{children}</main>

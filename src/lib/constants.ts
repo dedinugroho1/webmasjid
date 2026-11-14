@@ -28,10 +28,13 @@ export const FUND_LABELS: Record<CashFund, string> = {
 };
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  KAJIAN: "Kajian",
+  KAJIAN: "Kajian / Tabligh Akbar",
   JUMAT: "Sholat Jumat",
-  SOSIAL: "Kegiatan Sosial",
+  SOSIAL: "Kegiatan Sosial / PHBI",
 };
+
+/** Jenis agenda yang bisa dipilih (petugas Jumat punya menu sendiri). */
+export const EVENT_TYPE_OPTIONS: EventType[] = ["KAJIAN", "SOSIAL"];
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   DKM_ADMIN: "Admin DKM",

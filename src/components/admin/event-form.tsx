@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
-import { EVENT_TYPE_LABELS } from "@/lib/constants";
+import { EVENT_TYPE_LABELS, EVENT_TYPE_OPTIONS } from "@/lib/constants";
 
 type Action = (prev: EventFormState, formData: FormData) => Promise<EventFormState>;
 
@@ -40,9 +40,10 @@ export function EventForm({ action, initial, cancelHref }: { action: Action; ini
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Jenis Agenda" htmlFor="type">
           <NativeSelect id="type" name="type" value={type} onChange={(e) => setType(e.target.value)}>
-            {Object.entries(EVENT_TYPE_LABELS).map(([v, l]) => (
+            {/* Jenis JUMAT lama tetap bisa diedit, tapi tidak ditawarkan untuk agenda baru. */}
+            {[...EVENT_TYPE_OPTIONS, ...(initial?.type === "JUMAT" ? (["JUMAT"] as const) : [])].map((v) => (
               <option key={v} value={v}>
-                {l}
+                {EVENT_TYPE_LABELS[v]}
               </option>
             ))}
           </NativeSelect>
@@ -55,7 +56,7 @@ export function EventForm({ action, initial, cancelHref }: { action: Action; ini
         <Input
           id="title"
           name="title"
-          placeholder={isJumat ? "Sholat Jumat — Menjaga Amanah" : "Kajian Tafsir Juz 30"}
+          placeholder={isJumat ? "Sholat Jumat — Menjaga Amanah" : "Tabligh Akbar Maulid Nabi"}
           defaultValue={initial?.title}
           required
         />

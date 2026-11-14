@@ -33,29 +33,32 @@ test("edit transaksi: ubah jenis, nominal & tanggal; tidak bisa lintas masjid", 
   await ctx.close();
 });
 
-test("edit agenda: waktu & petugas tersimpan, kolom dikosongkan jadi kosong", async ({ page }) => {
+test("edit agenda: waktu & pemateri tersimpan, kolom dikosongkan jadi kosong", async ({ page }) => {
   const { slug } = await registerMasjid(page);
   await page.goto(`/${slug}/admin/agenda`);
-  await page.fill("#dateTime", "2026-12-04T11:45");
-  await page.selectOption("#type", "JUMAT");
-  await page.fill("#title", "Jumat Awal");
+  await page.fill("#dateTime", "2026-12-04T19:30");
+  await page.selectOption("#type", "KAJIAN");
+  await page.fill("#title", "Tabligh Akbar Awal");
   await page.fill("#speaker", "Ust. A");
-  await page.fill("#location", "Ruang utama");
+  await page.fill("#location", "Halaman masjid");
   await page.getByRole("button", { name: "Simpan Agenda" }).click();
   await expect(page.getByText("Agenda tersimpan.")).toBeVisible();
+  // Jenis "Sholat Jumat" tidak lagi ditawarkan (ada menu Petugas Jumat).
+  await expect(page.locator("#type option[value=JUMAT]")).toHaveCount(0);
 
-  await page.getByRole("listitem").filter({ hasText: "Jumat Awal" }).getByRole("link", { name: "Edit" }).click();
-  await expect(page.locator("#dateTime")).toHaveValue("2026-12-04T11:45");
-  await page.fill("#title", "Jumat Diperbarui");
-  await page.fill("#imam", "Ust. B");
+  await page.getByRole("listitem").filter({ hasText: "Tabligh Akbar Awal" }).getByRole("link", { name: "Edit" }).click();
+  await page.waitForURL(/\/admin\/agenda\/[^/]+$/);
+  await expect(page.locator("#dateTime")).toHaveValue("2026-12-04T19:30");
+  await page.fill("#title", "Tabligh Akbar Diperbarui");
+  await page.fill("#speaker", "Ust. B");
   await page.fill("#location", "");
-  await page.fill("#dateTime", "2026-12-11T11:50");
+  await page.fill("#dateTime", "2026-12-11T20:00");
   await page.getByRole("button", { name: "Simpan Perubahan" }).click();
   await page.waitForURL(`**/${slug}/admin/agenda`);
 
-  const item = page.getByRole("listitem").filter({ hasText: "Jumat Diperbarui" });
+  const item = page.getByRole("listitem").filter({ hasText: "Tabligh Akbar Diperbarui" });
   await expect(item).toContainText("11 Desember 2026");
-  await expect(item).toContainText("11:50");
-  await expect(item).toContainText("Imam: Ust. B");
-  await expect(item).not.toContainText("Ruang utama");
+  await expect(item).toContainText("20:00");
+  await expect(item).toContainText("Pemateri: Ust. B");
+  await expect(item).not.toContainText("Halaman masjid");
 });

@@ -96,3 +96,10 @@
   background-image: radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--primary) 18%, transparent) 1px, transparent 0);
   background-size: 22px 22px;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

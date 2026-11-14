@@ -29,9 +29,12 @@ export function TransactionForm({
   today,
   initial,
   cancelHref,
+  defaults,
 }: {
   action: Action;
   today: string;
+  /** Nilai awal untuk input cepat (mis. Infaq Jumat), tetap mode tambah. */
+  defaults?: { category?: string; transactionDate?: string };
   /** Diisi saat mode edit. */
   initial?: TransactionInitial;
   cancelHref?: string;
@@ -74,7 +77,7 @@ export function TransactionForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Tanggal" htmlFor="transactionDate" error={state?.fieldErrors?.transactionDate}>
-          <Input id="transactionDate" name="transactionDate" type="date" defaultValue={initial?.transactionDate ?? today} required />
+          <Input id="transactionDate" name="transactionDate" type="date" defaultValue={initial?.transactionDate ?? defaults?.transactionDate ?? today} required />
         </Field>
         <Field label="Jenis Kas" htmlFor="fund" error={state?.fieldErrors?.fund}>
           <NativeSelect id="fund" name="fund" defaultValue={initial?.fund ?? "OPERASIONAL"}>
@@ -90,7 +93,7 @@ export function TransactionForm({
             id="category"
             name="category"
             key={type}
-            defaultValue={initial && initial.type === type ? initial.category : undefined}
+            defaultValue={initial && initial.type === type ? initial.category : type === "IN" ? defaults?.category : undefined}
           >
             {categories.map((c) => (
               <option key={c}>{c}</option>

@@ -1,8 +1,17 @@
 import "server-only";
 import { cache } from "react";
-import { and, asc, desc, eq, gt, gte, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
-import { announcements, events, galleryItems, prayerSettings, tenants, type Tenant } from "@/db/schema";
+import {
+  announcements,
+  events,
+  galleryItems,
+  jumatSchedules,
+  prayerSettings,
+  routineKajian,
+  tenants,
+  type Tenant,
+} from "@/db/schema";
 import { DEFAULT_CITY } from "./cities";
 
 /** Ambil masjid berdasarkan slug (di-cache per request). */
@@ -71,6 +80,22 @@ export async function getGallery(tenantId: string, limit = 12) {
     .where(eq(galleryItems.tenantId, tenantId))
     .orderBy(desc(galleryItems.takenAt), desc(galleryItems.createdAt))
     .limit(limit);
+}
+
+export async function getJumatSchedules(tenantId: string, dates: string[]) {
+  if (!dates.length) return [];
+  return db
+    .select()
+    .from(jumatSchedules)
+    .where(and(eq(jumatSchedules.tenantId, tenantId), inArray(jumatSchedules.date, dates)));
+}
+
+export async function getActiveKajian(tenantId: string) {
+  return db
+    .select()
+    .from(routineKajian)
+    .where(and(eq(routineKajian.tenantId, tenantId), eq(routineKajian.isActive, true)))
+    .orderBy(asc(routineKajian.dayOfWeek), asc(routineKajian.createdAt));
 }
 
 export async function listPublishedTenants(limit = 48) {

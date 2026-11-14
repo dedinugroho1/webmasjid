@@ -27,8 +27,10 @@ export default async function AgendaPage({ params }: { params: Promise<{ slug: s
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="text-2xl font-bold">Agenda & Kajian</h1>
-        <p className="text-muted-foreground text-sm">Jadwal kajian, petugas sholat Jumat, dan kegiatan sosial.</p>
+        <h1 className="text-2xl font-bold">Agenda Kegiatan</h1>
+        <p className="text-muted-foreground text-sm">
+          Kegiatan sekali waktu: tabligh akbar, santunan, PHBI, kerja bakti. Kajian mingguan diisi di menu Kajian Rutin.
+        </p>
       </div>
       <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
         <Card className="self-start">

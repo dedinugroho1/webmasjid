@@ -10,7 +10,7 @@ export function formatRupiah(value: number) {
   return rupiah.format(value);
 }
 
-export function formatDate(value: Date | string, timeZone = "Asia/Jakarta", opts?: Intl.DateTimeFormatOptions) {
+export function formatDate(value: Date | string, timeZone = "Asia/Jakarta", opts?: Intl.DateTimeFormatOptions): string {
   const d = typeof value === "string" ? new Date(value.length === 10 ? `${value}T00:00:00Z` : value) : value;
   return new Intl.DateTimeFormat("id-ID", {
     day: "numeric",
@@ -19,7 +19,11 @@ export function formatDate(value: Date | string, timeZone = "Asia/Jakarta", opts
     // tanggal murni (YYYY-MM-DD) disimpan tanpa zona waktu → tampilkan apa adanya (UTC)
     timeZone: typeof value === "string" && value.length === 10 ? "UTC" : timeZone,
     ...opts,
-  }).format(d);
+  })
+    .format(d)
+    // Lazim di lingkungan masjid: "Ahad" untuk hari Minggu.
+    .replace(/\bMinggu\b/, "Ahad")
+    .replace(/\bMin\b/, "Ahd");
 }
 
 export function formatTime(value: Date, timeZone = "Asia/Jakarta") {
