@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
 import { Loader2 } from "lucide-react";
 import { signInAction } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Field } from "./field";
 
 export function SignInForm({ next }: { next?: string }) {
-  const [state, action, pending] = useActionState(signInAction, null);
+  const [state, action, pending] = useActionForm(signInAction, null);
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={action} className="grid gap-4">
       <input type="hidden" name="next" value={next ?? ""} />
       <Field label="Email" htmlFor="email" error={state?.fieldErrors?.email}>
         <Input id="email" name="email" type="email" autoComplete="email" required />
