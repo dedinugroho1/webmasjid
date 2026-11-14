@@ -1,8 +1,8 @@
 import "server-only";
 import { cache } from "react";
-import { and, asc, desc, eq, gte, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
-import { events, prayerSettings, tenants, type Tenant } from "@/db/schema";
+import { announcements, events, galleryItems, prayerSettings, tenants, type Tenant } from "@/db/schema";
 import { DEFAULT_CITY } from "./cities";
 
 /** Ambil masjid berdasarkan slug (di-cache per request). */
@@ -46,6 +46,30 @@ export async function getUpcomingEvents(tenantId: string, limit = 10) {
     .from(events)
     .where(and(eq(events.tenantId, tenantId), gte(events.dateTime, since)))
     .orderBy(asc(events.dateTime))
+    .limit(limit);
+}
+
+/** Pengumuman yang belum kedaluwarsa; disematkan lebih dulu. */
+export async function getActiveAnnouncements(tenantId: string, limit = 5) {
+  return db
+    .select()
+    .from(announcements)
+    .where(
+      and(
+        eq(announcements.tenantId, tenantId),
+        or(isNull(announcements.expiresAt), gt(announcements.expiresAt, new Date())),
+      ),
+    )
+    .orderBy(desc(announcements.isPinned), desc(announcements.createdAt))
+    .limit(limit);
+}
+
+export async function getGallery(tenantId: string, limit = 12) {
+  return db
+    .select()
+    .from(galleryItems)
+    .where(eq(galleryItems.tenantId, tenantId))
+    .orderBy(desc(galleryItems.takenAt), desc(galleryItems.createdAt))
     .limit(limit);
 }
 
