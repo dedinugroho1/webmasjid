@@ -16,7 +16,8 @@
     "db:seed": "tsx scripts/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "superadmin": "tsx scripts/make-superadmin.ts"
   },
   "engines": {
     "node": ">=20.9"
