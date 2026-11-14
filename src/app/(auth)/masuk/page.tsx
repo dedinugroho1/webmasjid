@@ -19,6 +19,11 @@ export default async function MasukPage({ searchParams }: { searchParams: Promis
             Akun Anda tidak memiliki akses ke masjid tersebut. Silakan masuk dengan akun pengurusnya.
           </p>
         )}
+        {error === "suspended" && (
+          <p className="rounded-md bg-amber-100 p-3 text-sm text-amber-900">
+            Website masjid ini sedang ditangguhkan oleh pengelola platform. Hubungi admin WebMasjid untuk informasi lebih lanjut.
+          </p>
+        )}
         {reset && (
           <p className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-900">Password berhasil diganti. Silakan masuk.</p>
         )}

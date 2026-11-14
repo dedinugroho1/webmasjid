@@ -14,15 +14,27 @@ export type TenantAccess = {
   user: { id: string; name: string; email: string; role: UserRole };
 };
 
+type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
+
+/**
+ * Aturan akses tenant:
+ * - SUPERADMIN boleh mengelola semua masjid (termasuk yang ditangguhkan).
+ * - Selain itu, `session.tenantId` (atau `user.tenantId`) harus sama dengan
+ *   tenant.id, masjid tidak ditangguhkan, dan role termasuk `roles` (bila diisi).
+ */
+function evaluate(session: Session, tenant: Tenant, roles?: UserRole[]) {
+  const role = (session.user.role ?? "DKM_ADMIN") as UserRole;
+  if (role === "SUPERADMIN") return { ok: true as const, role };
+  const boundTenant = session.session.tenantId ?? session.user.tenantId;
+  if (boundTenant !== tenant.id) return { ok: false as const, reason: "forbidden" };
+  if (tenant.suspendedAt) return { ok: false as const, reason: "suspended" };
+  if (roles && !roles.includes(role)) return { ok: false as const, reason: "forbidden" };
+  return { ok: true as const, role };
+}
+
 /**
  * Guard utama multi-tenant: pastikan user login DAN berhak atas masjid `slug`.
- *
- * Aturan:
- * - SUPERADMIN boleh mengelola semua masjid.
- * - Selain itu, `session.tenantId` (atau `user.tenantId`) harus sama dengan tenant.id.
- * - `roles` opsional untuk membatasi modul tertentu (mis. Buku Kas: DKM_ADMIN & BENDAHARA).
- *
- * Gunakan di setiap page/layout/server action/route handler admin.
+ * Gunakan di setiap page/layout/server action admin.
  */
 export async function requireTenantAccess(slug: string, roles?: UserRole[]): Promise<TenantAccess> {
   const tenant = await getTenantBySlug(slug);
@@ -31,14 +43,12 @@ export async function requireTenantAccess(slug: string, roles?: UserRole[]): Pro
   const session = await getSession();
   if (!session) redirect(`/masuk?next=/${tenant.slug}/admin`);
 
-  const role = (session.user.role ?? "DKM_ADMIN") as UserRole;
-  const boundTenant = session.session.tenantId ?? session.user.tenantId;
-  const allowed = role === "SUPERADMIN" || (boundTenant === tenant.id && (!roles || roles.includes(role)));
-  if (!allowed) redirect(`/masuk?error=forbidden&next=/${tenant.slug}/admin`);
+  const res = evaluate(session, tenant, roles);
+  if (!res.ok) redirect(`/masuk?error=${res.reason}&next=/${tenant.slug}/admin`);
 
   return {
     tenant,
-    user: { id: session.user.id, name: session.user.name, email: session.user.email, role },
+    user: { id: session.user.id, name: session.user.name, email: session.user.email, role: res.role },
   };
 }
 
@@ -48,8 +58,13 @@ export async function checkTenantAccess(slug: string, roles?: UserRole[]) {
   if (!tenant) return null;
   const session = await getSession();
   if (!session) return null;
-  const role = (session.user.role ?? "DKM_ADMIN") as UserRole;
-  const boundTenant = session.session.tenantId ?? session.user.tenantId;
-  const allowed = role === "SUPERADMIN" || (boundTenant === tenant.id && (!roles || roles.includes(role)));
-  return allowed ? { tenant, user: session.user } : null;
+  return evaluate(session, tenant, roles).ok ? { tenant, user: session.user } : null;
+}
+
+/** Guard panel superadmin platform. */
+export async function requireSuperadmin() {
+  const session = await getSession();
+  if (!session) redirect("/masuk?next=/superadmin");
+  if (session.user.role !== "SUPERADMIN") redirect("/masuk?error=forbidden&next=/superadmin");
+  return { id: session.user.id, name: session.user.name, email: session.user.email };
 }

@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { and, asc, desc, eq, gte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { events, prayerSettings, tenants, type Tenant } from "@/db/schema";
 import { DEFAULT_CITY } from "./cities";
@@ -10,6 +10,12 @@ export const getTenantBySlug = cache(async (slug: string): Promise<Tenant | null
   const [row] = await db.select().from(tenants).where(eq(tenants.slug, slug.toLowerCase())).limit(1);
   return row ?? null;
 });
+
+/** Untuk halaman publik: masjid yang ditangguhkan dianggap tidak ada. */
+export async function getPublicTenantBySlug(slug: string) {
+  const tenant = await getTenantBySlug(slug);
+  return tenant && !tenant.suspendedAt ? tenant : null;
+}
 
 export const getPrayerSettings = cache(async (tenantId: string) => {
   const [row] = await db.select().from(prayerSettings).where(eq(prayerSettings.tenantId, tenantId)).limit(1);
@@ -53,7 +59,7 @@ export async function listPublishedTenants(limit = 48) {
       logoUrl: tenants.logoUrl,
     })
     .from(tenants)
-    .where(eq(tenants.isPublished, true))
+    .where(and(eq(tenants.isPublished, true), isNull(tenants.suspendedAt)))
     .orderBy(desc(tenants.createdAt))
     .limit(limit);
 }

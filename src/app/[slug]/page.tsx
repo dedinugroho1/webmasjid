@@ -10,7 +10,7 @@ import { EventList } from "@/components/masjid/event-list";
 import { PrayerWidget } from "@/components/masjid/prayer-widget";
 import { QrisCard } from "@/components/masjid/qris-card";
 import { getBalances, listTransactions } from "@/lib/finance";
-import { getPrayerConfig, getTenantBySlug, getUpcomingEvents } from "@/lib/tenant";
+import { getPrayerConfig, getPublicTenantBySlug, getUpcomingEvents } from "@/lib/tenant";
 
 // Data kas & agenda selalu segar; halaman dirender per permintaan.
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const tenant = await getTenantBySlug(slug);
+  const tenant = await getPublicTenantBySlug(slug);
   if (!tenant) return { title: "Masjid tidak ditemukan" };
   return {
     title: tenant.name,
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function MasjidPage({ params }: Props) {
   const { slug } = await params;
-  const tenant = await getTenantBySlug(slug);
+  const tenant = await getPublicTenantBySlug(slug);
   if (!tenant) notFound();
 
   const [prayerConfig, balances, recent, upcoming] = await Promise.all([
