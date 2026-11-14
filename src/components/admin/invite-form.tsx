@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useState} from "react";
 import { Check, Copy, Link2, Loader2, MessageCircle } from "lucide-react";
 import type { InviteState } from "@/app/[slug]/admin/pengurus/actions";
 import { Field } from "@/components/auth/field";
@@ -11,7 +12,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 type Action = (prev: InviteState, formData: FormData) => Promise<InviteState>;
 
 export function InviteForm({ action, masjidName }: { action: Action; masjidName: string }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const [copied, setCopied] = useState(false);
   const waText = state?.url
     ? `Assalamu'alaikum, Anda diundang menjadi pengurus ${masjidName} di WebMasjid. Silakan buat akun melalui tautan ini (berlaku 7 hari): ${state.url}`
@@ -19,7 +20,7 @@ export function InviteForm({ action, masjidName }: { action: Action; masjidName:
 
   return (
     <div className="grid gap-4">
-      <form action={formAction} className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <form onSubmit={formAction} className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <Field label="Peran" htmlFor="role">
           <NativeSelect id="role" name="role" defaultValue="BENDAHARA">
             <option value="BENDAHARA">Bendahara (hanya Buku Kas)</option>

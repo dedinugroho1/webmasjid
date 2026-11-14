@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import { Loader2, Paperclip, Plus, Save } from "lucide-react";
 import type { KasFormState } from "@/app/[slug]/admin/kas/actions";
@@ -39,7 +40,7 @@ export function TransactionForm({
   initial?: TransactionInitial;
   cancelHref?: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const [type, setType] = useState<TransactionType>(initial?.type ?? "IN");
   const [amount, setAmount] = useState(initial ? initial.amount.toLocaleString("id-ID") : "");
   const formRef = useRef<HTMLFormElement>(null);
@@ -58,7 +59,7 @@ export function TransactionForm({
   }, [state]);
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-4">
+    <form ref={formRef} onSubmit={formAction} className="grid gap-4">
       <input type="hidden" name="type" value={type} />
       <div className="grid grid-cols-2 gap-2 rounded-lg border p-1">
         {(["IN", "OUT"] as const).map((t) => (

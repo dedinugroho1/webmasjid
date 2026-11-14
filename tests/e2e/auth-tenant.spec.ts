@@ -53,3 +53,24 @@ test("honeypot menolak bot", async ({ page }) => {
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText("Pendaftaran gagal. Silakan coba lagi.")).toBeVisible();
 });
+
+test("isian form tidak hilang setelah error (login & daftar)", async ({ page }) => {
+  await page.goto("/masuk");
+  await page.fill("#email", DEMO.email);
+  await page.fill("#password", "salah-sekali");
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await expect(page.getByText("Email atau password salah.")).toBeVisible();
+  await expect(page.locator("#email")).toHaveValue(DEMO.email);
+
+  await page.goto("/daftar");
+  await page.fill("#masjidName", "Masjid Tetap Terisi");
+  await page.fill("#slug", "admin");
+  await page.fill("#adminName", "Pak Tetap");
+  await page.fill("#email", "tetap@example.test");
+  await page.fill("#password", "rahasia123");
+  await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
+  await expect(page.getByText(/dicadangkan/)).toBeVisible();
+  await expect(page.locator("#masjidName")).toHaveValue("Masjid Tetap Terisi");
+  await expect(page.locator("#adminName")).toHaveValue("Pak Tetap");
+  await expect(page.locator("#email")).toHaveValue("tetap@example.test");
+});

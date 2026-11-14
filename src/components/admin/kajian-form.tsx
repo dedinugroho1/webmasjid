@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useEffect, useRef} from "react";
 import Link from "next/link";
 import { Loader2, Plus, Save } from "lucide-react";
 import type { KajianState } from "@/app/[slug]/admin/kajian/actions";
@@ -26,7 +27,7 @@ export type KajianInitial = {
 const TIME_SUGGESTIONS = ["Ba'da Subuh", "Ba'da Dzuhur", "Ba'da Ashar", "Ba'da Maghrib", "Ba'da Isya"];
 
 export function KajianForm({ action, initial, cancelHref }: { action: Action; initial?: KajianInitial; cancelHref?: string }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state?.ok && !initial) ref.current?.reset();
@@ -34,7 +35,7 @@ export function KajianForm({ action, initial, cancelHref }: { action: Action; in
   const fe = state?.fieldErrors;
 
   return (
-    <form ref={ref} action={formAction} className="grid gap-4">
+    <form ref={ref} onSubmit={formAction} className="grid gap-4">
       <div className="grid grid-cols-2 gap-4">
         <Field label="Hari" htmlFor="dayOfWeek" error={fe?.dayOfWeek}>
           <NativeSelect id="dayOfWeek" name="dayOfWeek" defaultValue={String(initial?.dayOfWeek ?? 0)}>

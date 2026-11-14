@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import { Loader2, Plus, Save } from "lucide-react";
 import type { EventFormState } from "@/app/[slug]/admin/agenda/actions";
@@ -26,7 +27,7 @@ export type EventInitial = {
 };
 
 export function EventForm({ action, initial, cancelHref }: { action: Action; initial?: EventInitial; cancelHref?: string }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const [type, setType] = useState<string>(initial?.type ?? "KAJIAN");
   const formRef = useRef<HTMLFormElement>(null);
   const isJumat = type === "JUMAT";
@@ -36,7 +37,7 @@ export function EventForm({ action, initial, cancelHref }: { action: Action; ini
   }, [state, initial]);
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-4">
+    <form ref={formRef} onSubmit={formAction} className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Jenis Agenda" htmlFor="type">
           <NativeSelect id="type" name="type" value={type} onChange={(e) => setType(e.target.value)}>

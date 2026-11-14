@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
+import {useState} from "react";
 import { Loader2, Save } from "lucide-react";
 import type { SettingsFormState } from "@/app/[slug]/admin/pengaturan/actions";
 import type { Tenant } from "@/db/schema";
@@ -32,7 +33,7 @@ export function SettingsForm({
     iqomahMinutes: Partial<Record<PrayerKey, number>>;
   };
 }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const [loc, setLoc] = useState({
     city: tenant.city ?? "",
     latitude: String(tenant.latitude ?? ""),
@@ -45,7 +46,7 @@ export function SettingsForm({
   const fe = state?.fieldErrors;
 
   return (
-    <form action={formAction} className="grid gap-6">
+    <form onSubmit={formAction} className="grid gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Profil Masjid</CardTitle>

@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "superadmin": "tsx scripts/make-superadmin.ts",
-    "vercel-build": "tsx scripts/vercel-build.ts"
+    "vercel-build": "tsx scripts/vercel-build.ts",
+    "test:prod": "playwright test --config playwright.prod.config.ts"
   },
   "engines": {
     "node": ">=20.9"
