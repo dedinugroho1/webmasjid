@@ -12,7 +12,19 @@ import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "../src/db";
-import { accounts, announcements, cashTransactions, events, prayerSettings, tenants, users } from "../src/db/schema";
+import {
+  accounts,
+  announcements,
+  cashTransactions,
+  events,
+  jumatSchedules,
+  prayerSettings,
+  routineKajian,
+  tenants,
+  users,
+} from "../src/db/schema";
+import { todayISO } from "../src/lib/format";
+import { addDays, fridayOnOrBefore, upcomingFridays } from "../src/lib/jumat";
 
 const SLUG = "al-ikhlas";
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@webmasjid.test";
@@ -90,11 +102,12 @@ async function main() {
 
   console.log("💰 Mengisi buku kas…");
   const tx: (typeof cashTransactions.$inferInsert)[] = [];
+  const lastFriday = fridayOnOrBefore(todayISO("Asia/Jakarta"));
   for (let week = 0; week < 10; week++) {
     tx.push({
       tenantId: tenant.id, type: "IN", fund: "OPERASIONAL", category: "Infaq Jumat",
       amount: 2_500_000 + ((week * 317_000) % 1_200_000), description: `Kotak Jumat pekan ke-${10 - week}`,
-      transactionDate: isoDaysAgo(week * 7 + 1), createdBy: userId,
+      transactionDate: addDays(lastFriday, -7 * week), createdBy: userId,
     });
     tx.push({
       tenantId: tenant.id, type: "IN", fund: "OPERASIONAL", category: "Kotak Amal Harian",
@@ -122,10 +135,30 @@ async function main() {
   };
   const daysToFriday = (5 - new Date().getUTCDay() + 7) % 7 || 7;
   await db.insert(events).values([
-    { tenantId: tenant.id, type: "JUMAT", title: "Sholat Jumat — Menjaga Amanah", speaker: "Ust. Ahmad Fauzi, Lc.", imam: "Ust. Hasan Basri", dateTime: at(daysToFriday, 11, 45), location: "Ruang utama" },
-    { tenantId: tenant.id, type: "KAJIAN", title: "Kajian Tafsir Juz 30", speaker: "Ust. Abdullah Syafi'i", dateTime: at(2, 5, 15), location: "Ruang utama", description: "Rutin setiap Ahad ba'da Subuh. Terbuka untuk umum." },
-    { tenantId: tenant.id, type: "KAJIAN", title: "Kajian Muslimah: Fiqih Keluarga", speaker: "Ustadzah Fatimah", dateTime: at(4, 16, 0), location: "Lantai 2" },
+    { tenantId: tenant.id, type: "KAJIAN", title: "Tabligh Akbar: Meneladani Akhlak Rasulullah SAW", speaker: "Ust. Hanafi Rahman (undangan)", dateTime: at(12, 19, 30), location: "Halaman masjid" },
     { tenantId: tenant.id, type: "SOSIAL", title: "Santunan Anak Yatim & Dhuafa", dateTime: at(10, 9, 0), location: "Halaman masjid", description: "Penyaluran 50 paket sembako." },
+    { tenantId: tenant.id, type: "SOSIAL", title: "Kerja Bakti Bersih Masjid", dateTime: at(daysToFriday + 2, 7, 0), description: "Membersihkan karpet & tempat wudhu. Mohon bawa peralatan." },
+  ]);
+
+  console.log("🎤 Mengisi petugas Jumat & kajian rutin…");
+  const khatib = ["Ust. Ahmad Fauzi, Lc.", "Ust. Hasan Basri, S.Ag.", "KH. Mahmud Fauzan", "Ust. Ridwan Hakim, M.Pd.I."];
+  const fridays = [addDays(lastFriday, -7), lastFriday, ...upcomingFridays("Asia/Jakarta", 4)];
+  await db.insert(jumatSchedules).values(
+    [...new Set(fridays)].map((date, i) => ({
+      tenantId: tenant.id,
+      date,
+      khatib: khatib[i % khatib.length],
+      imam: khatib[(i + 1) % khatib.length],
+      muadzin: i % 2 ? "Sdr. Fikri" : "Sdr. Ilham",
+      theme: ["Menjaga Amanah", "Keutamaan Sedekah", "Birrul Walidain", "Menjaga Lisan", "Istiqamah"][i % 5],
+    })),
+  );
+  await db.insert(routineKajian).values([
+    { tenantId: tenant.id, dayOfWeek: 0, time: "Ba'da Subuh", title: "Tafsir Juz 'Amma", ustadz: "Ust. Abdullah Syafi'i", audience: "Umum" },
+    { tenantId: tenant.id, dayOfWeek: 1, time: "Ba'da Maghrib", title: "Tahsin & Tilawah Al-Qur'an", ustadz: "Ust. Ridwan Hakim", audience: "Umum" },
+    { tenantId: tenant.id, dayOfWeek: 3, time: "Ba'da Maghrib", title: "Kitab Riyadhus Shalihin", ustadz: "KH. Mahmud Fauzan", frequency: "PEKAN_1_3", audience: "Bapak-bapak" },
+    { tenantId: tenant.id, dayOfWeek: 4, time: "16.00", title: "Majelis Taklim: Fiqih Wanita", ustadz: "Ustadzah Fatimah", frequency: "PEKAN_2_4", audience: "Ibu-ibu", location: "Lantai 2" },
+    { tenantId: tenant.id, dayOfWeek: 6, time: "Ba'da Isya", title: "Kajian Remaja Masjid", ustadz: "Ust. Fikri Ramadhan", audience: "Remaja" },
   ]);
 
   console.log("📣 Mengisi pengumuman…");
