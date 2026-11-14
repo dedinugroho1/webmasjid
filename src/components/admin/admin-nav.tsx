@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpenText, CalendarDays, ExternalLink, LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { BookOpenText, CalendarDays, ExternalLink, LayoutDashboard, LogOut, Settings, UserRound, Users } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +16,11 @@ export function AdminNav({ slug, canManage }: { slug: string; canManage: boolean
     ...(canManage
       ? [
           { href: `${base}/agenda`, label: "Agenda & Kajian", icon: CalendarDays },
+          { href: `${base}/pengurus`, label: "Pengurus", icon: Users },
           { href: `${base}/pengaturan`, label: "Pengaturan", icon: Settings },
         ]
       : []),
+    { href: `${base}/akun`, label: "Akun Saya", icon: UserRound },
   ];
 
   return (
