@@ -17,11 +17,14 @@ Proyek amal jariyah digital: ribuan masjid bisa memiliki website sendiri di satu
 
 | Modul | Keterangan |
 | --- | --- |
-| 📒 **Buku Kas Transparan** | Catat pemasukan/pengeluaran untuk **kas operasional** & **kas pembangunan**, lampirkan bukti, tampil terbuka di website. Laporan bulanan **PDF 1-klik** siap tempel di papan pengumuman. |
-| 🕰️ **Jadwal Sholat Otomatis** | Dihitung dari koordinat masjid (kriteria Kemenag RI & metode lain), hitung mundur adzan & iqomah. Tanpa API eksternal. |
+| 📒 **Buku Kas Transparan** | Catat & edit pemasukan/pengeluaran untuk **kas operasional** & **kas pembangunan**, lampirkan bukti, tampil terbuka di website. Laporan bulanan **PDF 1-klik**. |
+| 🕰️ **Jadwal Sholat Otomatis** | Dihitung dari koordinat masjid (kriteria Kemenag RI & metode lain), **koreksi menit & jeda iqomah per waktu**, hitung mundur adzan & iqomah. |
 | 💳 **Infaq Digital** | QRIS masjid (perbesar/unduh) + daftar rekening resmi dengan tombol salin. |
-| 📅 **Agenda & Kajian** | Jadwal kajian, petugas Jumat (khatib & imam), kegiatan sosial. |
-| 🏢 **Multi-tenant** | Satu instance melayani banyak masjid. Setiap sesi admin terikat ke masjidnya (`sessions.tenant_id`). |
+| 📅 **Agenda & Kajian** | Jadwal kajian, petugas Jumat (khatib & imam), kegiatan sosial — bisa diedit. |
+| 📣 **Pengumuman & Galeri** | Pengumuman (sematkan, batas tampil) dan galeri foto kegiatan dengan kompresi otomatis. |
+| 👥 **Pengurus** | Undang bendahara/admin lewat link (WhatsApp), kelola peran, password sementara, lupa & ganti password. |
+| 🌐 **Domain Sendiri** | Setiap masjid bisa memakai domain sendiri, mis. `masjidalikhlas.or.id`. |
+| 🛡️ **Keamanan** | Isolasi multi-tenant, rate limit login/daftar/reset (berbasis DB), honeypot anti-bot, panel **superadmin** untuk menangguhkan pendaftaran palsu. |
 
 ## 🧱 Tech Stack
 
@@ -36,36 +39,44 @@ Proyek amal jariyah digital: ribuan masjid bisa memiliki website sendiri di satu
 
 ```
 webmasjid/
+├── .github/workflows/ci.yml     # Typecheck, unit test, cek migrasi, E2E
 ├── drizzle/                     # File migrasi SQL (drizzle-kit generate)
 ├── docs/                        # ARCHITECTURE.md, SELF-HOSTING.md
-├── scripts/seed.ts              # Data demo Masjid Al-Ikhlas
+├── scripts/
+│   ├── seed.ts                  # Data demo Masjid Al-Ikhlas
+│   └── make-superadmin.ts       # npm run superadmin -- <email>
+├── tests/
+│   ├── unit/                    # Vitest
+│   └── e2e/                     # Playwright
 └── src/
-    ├── proxy.ts                 # Cek cookie sesi untuk /{slug}/admin/*
+    ├── proxy.ts                 # Domain sendiri + cek cookie admin
     ├── app/
     │   ├── page.tsx             # Landing page webmasjid.com
-    │   ├── (auth)/              # /masuk & /daftar + server actions
+    │   ├── (auth)/              # masuk, daftar, undangan, lupa/reset password
+    │   ├── superadmin/          # Panel pengelola platform
     │   ├── api/auth/[...all]/   # Route handler Better Auth
+    │   ├── api/platform-redirect/ # Redirect domain sendiri → domain utama
     │   └── [slug]/              # ── TENANT (masjid) ──
     │       ├── page.tsx         # Website publik masjid
     │       └── admin/           # Dashboard DKM (dilindungi)
-    │           ├── page.tsx     # Ringkasan
-    │           ├── kas/         # Buku kas + laporan/route.ts (PDF)
+    │           ├── kas/         # Buku kas, edit, laporan/route.ts (PDF)
     │           ├── agenda/      # Agenda & kajian
-    │           └── pengaturan/  # Profil, lokasi, QRIS, rekening
-    ├── components/
-    │   ├── ui/                  # shadcn/ui
-    │   ├── landing/ masjid/ admin/ auth/
+    │           ├── pengumuman/  # Pengumuman
+    │           ├── galeri/      # Galeri kegiatan
+    │           ├── pengurus/    # Undangan & kelola pengurus
+    │           ├── akun/        # Ganti password
+    │           └── pengaturan/  # Profil, lokasi & koreksi jadwal, QRIS, domain
+    ├── components/              # ui/ (shadcn), landing/, masjid/, admin/, auth/
     ├── db/
-    │   ├── index.ts             # Koneksi Neon + Drizzle
+    │   ├── index.ts             # Neon (default) atau node-postgres
     │   └── schema.ts            # Skema tabel
-    ├── hooks/
     └── lib/
-        ├── auth.ts              # Konfigurasi Better Auth (server)
-        ├── auth-client.ts       # Client Better Auth (React)
-        ├── session.ts           # requireTenantAccess() — guard multi-tenant
-        ├── tenant.ts            # Query tenant, jadwal, agenda
-        ├── finance.ts           # Saldo & laporan kas
+        ├── auth.ts              # Better Auth (server)
+        ├── session.ts           # requireTenantAccess / requireSuperadmin
+        ├── rate-limit.ts        # Batas percobaan atomik berbasis DB
+        ├── domains.ts           # Validasi & deteksi domain sendiri
         ├── prayer.ts            # Perhitungan jadwal sholat
+        ├── finance.ts           # Saldo & laporan kas
         ├── storage.ts           # Upload gambar (Vercel Blob / data URL)
         └── pdf/cash-report.tsx  # Template PDF laporan kas
 ```
@@ -97,23 +108,29 @@ Panduan deploy lengkap (Vercel + Neon, domain sendiri): **[docs/SELF-HOSTING.md]
 | `npm run db:push` | Sinkron skema langsung (prototyping) |
 | `npm run db:studio` | Drizzle Studio |
 | `npm run db:seed` | Isi data demo |
+| `npm test` | Unit test (Vitest) |
+| `npm run test:e2e` | Tes end-to-end (Playwright, butuh Postgres) |
+| `npm run superadmin -- <email>` | Jadikan akun sebagai superadmin platform |
 
 ## 🔐 Model Keamanan Multi-tenant
 
-1. `proxy.ts` menolak cepat request `/{slug}/admin/*` tanpa cookie sesi.
+1. `proxy.ts` menolak cepat request `/{slug}/admin/*` & `/superadmin` tanpa cookie sesi.
 2. Setiap page, server action, dan route handler admin memanggil `requireTenantAccess(slug, roles?)`
    yang memverifikasi sesi di database dan mencocokkan `session.tenantId` dengan masjid pada URL.
 3. Semua query tulis memakai `tenant.id` hasil verifikasi — **tidak pernah** dari input form.
-4. Role: `DKM_ADMIN` (semua modul), `BENDAHARA` (buku kas saja), `SUPERADMIN` (semua masjid).
+4. Role: `DKM_ADMIN` (semua modul), `BENDAHARA` (buku kas saja), `SUPERADMIN` (semua masjid & panel platform).
+5. Rate limit login/daftar/reset password/undangan (per-IP & per-email) disimpan di database.
 
 ## 🗺️ Roadmap
 
-- [ ] Undang pengurus lain (bendahara) ke masjid yang sama
-- [ ] Panel superadmin platform
-- [ ] Custom domain per masjid (`masjidku.or.id` → tenant)
-- [ ] Penyesuaian menit per waktu sholat (koreksi jadwal lokal)
-- [ ] Galeri kegiatan & pengumuman
+- [x] Undang pengurus lain (bendahara) ke masjid yang sama
+- [x] Panel superadmin platform
+- [x] Custom domain per masjid
+- [x] Koreksi menit & jeda iqomah per waktu sholat
+- [x] Pengumuman & galeri kegiatan
 - [ ] TV Display masjid (sementara dinonaktifkan; kolom `tenants.running_text` tetap disimpan)
+- [ ] Ekspor buku kas ke Excel/CSV
+- [ ] Notifikasi WhatsApp untuk pengumuman
 
 ## 🤝 Kontribusi
 

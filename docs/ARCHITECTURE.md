@@ -9,6 +9,8 @@
                        │             /api/auth/*       Better Auth handler                               │
                        │             /{slug}           Website publik masjid  (RSC, force-dynamic)       │
                        │             /{slug}/admin/*   Dashboard DKM ─▶ requireTenantAccess(slug, roles) │
+                       │             /superadmin       Panel platform ─▶ requireSuperadmin()             │
+                       │  domain sendiri ─▶ rewrite /{slug}; login/admin ─▶ domain utama                │
                        └───────────────┬──────────────────────────────────────────────────────────────────┘
                                        │ Drizzle ORM (drizzle-orm/neon-serverless)
                                        ▼
@@ -38,6 +40,27 @@ Better Auth:
 - Pendaftaran masjid (`registerAction`): buat tenant → `auth.api.signUpEmail` → transaksi
   (set `users.tenant_id/role`, `sessions.tenant_id`, buat `prayer_settings`).
 
+## Pengurus & undangan
+
+- Admin DKM membuat link `/undangan/{token}` (token acak, disimpan sebagai hash SHA-256, sekali pakai,
+  berlaku 7 hari). Klaim undangan dilakukan dengan satu `UPDATE … WHERE accepted_at IS NULL` sehingga
+  tidak bisa dipakai dua kali secara bersamaan.
+- Tanpa email (Resend), admin dapat membuat password sementara; semua sesi pengurus tersebut dicabut.
+
+## Rate limit
+
+`src/lib/rate-limit.ts` → `consume(key, {window, max})` berupa satu upsert atomik di tabel `rate_limits`.
+Dipakai sebagai `customStorage` Better Auth (request langsung ke `/api/auth/*`) dan lewat `checkLimits()`
+di server action (login per-IP & per-email, daftar, reset password, terima undangan).
+
+## Domain sendiri
+
+`tenants.custom_domain` diperiksa di `proxy.ts` untuk host yang bukan milik platform (`PLATFORM_HOSTS`,
+host `NEXT_PUBLIC_APP_URL`, `*.vercel.app`). Lookup di-cache 60 detik per instance.
+Redirect ke domain utama dilakukan lewat route handler `/api/platform-redirect`, karena Next.js
+menormalkan header `Location` dari proxy menjadi relatif (host dibandingkan memakai header `Host`),
+yang menyebabkan loop di domain sendiri.
+
 ## Skema data
 
 ```
@@ -45,10 +68,14 @@ tenants ─┬─< users ──< sessions
          │          └─< accounts
          ├─< cash_transactions   (type IN/OUT, fund OPERASIONAL/PEMBANGUNAN, amount bigint Rupiah)
          ├─< events              (type KAJIAN/JUMAT/SOSIAL, speaker=khatib, imam)
-         └── prayer_settings     (calculation_method, iqomah_offset_minutes) — 1:1
-verifications (Better Auth)
+         ├─< announcements       (is_pinned, expires_at)
+         ├─< gallery_items
+         ├─< invitations         (token_hash, role, expires_at, accepted_at)
+         └── prayer_settings     (calculation_method, adjustments, iqomah_minutes) — 1:1
+verifications (Better Auth) · rate_limits
 ```
 
+`tenants.suspended_at` menandai masjid yang ditangguhkan superadmin (halaman publik 404, pengurus tidak bisa masuk).
 Nominal disimpan sebagai `bigint` Rupiah utuh (tanpa desimal) untuk menghindari galat floating-point.
 `transaction_date` bertipe `date` agar laporan bulanan tidak terpengaruh zona waktu.
 
@@ -57,6 +84,7 @@ Nominal disimpan sebagai `bigint` Rupiah utuh (tanpa desimal) untuk menghindari 
 - `src/lib/prayer.ts` memakai library `adhan` (pure JS) — dijalankan di **client** untuk hitung mundur real-time.
 - Tanggal kalender diambil di zona waktu masjid (`tenants.timezone`: WIB/WITA/WIT), bukan zona server.
 - Metode default **KEMENAG**: Subuh −20°, Isya −18°, ihtiyat ±2 menit, pembulatan ke atas.
+- `prayer_settings.adjustments` menggeser tiap waktu ±30 menit; `iqomah_minutes` mengatur jeda iqomah per waktu.
 
 ## Penyimpanan file
 
