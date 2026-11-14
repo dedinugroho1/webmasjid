@@ -1,0 +1,61 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { BookOpenText, CalendarDays, ExternalLink, LayoutDashboard, LogOut, Settings, Tv } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
+
+export function AdminNav({ slug, canManage }: { slug: string; canManage: boolean }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const base = `/${slug}/admin`;
+  const items = [
+    { href: base, label: "Ringkasan", icon: LayoutDashboard },
+    { href: `${base}/kas`, label: "Buku Kas", icon: BookOpenText },
+    ...(canManage
+      ? [
+          { href: `${base}/agenda`, label: "Agenda & Kajian", icon: CalendarDays },
+          { href: `${base}/pengaturan`, label: "Pengaturan", icon: Settings },
+        ]
+      : []),
+  ];
+
+  return (
+    <nav className="flex gap-1 overflow-x-auto md:flex-col">
+      {items.map(({ href, label, icon: Icon }) => {
+        const active = href === base ? pathname === base : pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              active ? "bg-primary text-primary-foreground" : "hover:bg-accent",
+            )}
+          >
+            <Icon className="size-4" /> {label}
+          </Link>
+        );
+      })}
+      <div className="hidden md:my-2 md:block md:border-t" />
+      <Link href={`/${slug}`} target="_blank" className="hover:bg-accent flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm">
+        <ExternalLink className="size-4" /> Lihat Situs
+      </Link>
+      <Link href={`/${slug}/tv`} target="_blank" className="hover:bg-accent flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm">
+        <Tv className="size-4" /> TV Display
+      </Link>
+      <button
+        type="button"
+        onClick={async () => {
+          await authClient.signOut();
+          router.push("/masuk");
+          router.refresh();
+        }}
+        className="text-destructive hover:bg-destructive/10 flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-left text-sm"
+      >
+        <LogOut className="size-4" /> Keluar
+      </button>
+    </nav>
+  );
+}
