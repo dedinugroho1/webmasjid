@@ -95,7 +95,8 @@ npm run dev
 
 Buka <http://localhost:3000>. Akun demo: `admin@webmasjid.test` / `demo12345` → `/al-ikhlas/admin`.
 
-Panduan deploy lengkap (Vercel + Neon, domain sendiri): **[docs/SELF-HOSTING.md](docs/SELF-HOSTING.md)**.
+Deploy otomatis dari GitHub ke Vercel (preview per branch): **[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)**.
+Panduan self-host lain (VPS/Docker, domain sendiri): **[docs/SELF-HOSTING.md](docs/SELF-HOSTING.md)**.
 
 ### Skrip
 
