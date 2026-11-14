@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
 import { Loader2 } from "lucide-react";
 import type { FormState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,9 @@ import { Field } from "./field";
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
 
 export function AcceptInviteForm({ action, loggedInAs }: { action: Action; loggedInAs?: string }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   return (
-    <form action={formAction} className="grid gap-4">
+    <form onSubmit={formAction} className="grid gap-4">
       {loggedInAs ? (
         <p className="text-sm">
           Anda masuk sebagai <b>{loggedInAs}</b>. Akun ini akan dijadikan pengurus masjid tersebut.
