@@ -2,7 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpenText, CalendarDays, ExternalLink, Images, LayoutDashboard, LogOut, Megaphone, Settings, UserRound, Users } from "lucide-react";
+import {
+  BookMarked,
+  BookOpenText,
+  CalendarDays,
+  ExternalLink,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  Megaphone,
+  Mic,
+  Printer,
+  Settings,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -15,9 +29,16 @@ export function AdminNav({ slug, canManage }: { slug: string; canManage: boolean
     { href: `${base}/kas`, label: "Buku Kas", icon: BookOpenText },
     ...(canManage
       ? [
-          { href: `${base}/agenda`, label: "Agenda & Kajian", icon: CalendarDays },
+          { href: `${base}/jumat`, label: "Petugas Jumat", icon: Mic },
+          { href: `${base}/kajian`, label: "Kajian Rutin", icon: BookMarked },
+          { href: `${base}/agenda`, label: "Agenda Kegiatan", icon: CalendarDays },
           { href: `${base}/pengumuman`, label: "Pengumuman", icon: Megaphone },
           { href: `${base}/galeri`, label: "Galeri", icon: Images },
+        ]
+      : []),
+    { href: `${base}/cetak`, label: "Cetak Papan Info", icon: Printer },
+    ...(canManage
+      ? [
           { href: `${base}/pengurus`, label: "Pengurus", icon: Users },
           { href: `${base}/pengaturan`, label: "Pengaturan", icon: Settings },
         ]
