@@ -1,7 +1,10 @@
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EventForm } from "@/components/admin/event-form";
@@ -60,7 +63,14 @@ export default async function AgendaPage({ params }: { params: Promise<{ slug: s
                           .join(" · ")}
                       </p>
                     </div>
-                    <DeleteButton action={deleteEvent.bind(null, slug, e.id)} confirmText="Hapus agenda ini?" />
+                    <div className="flex shrink-0">
+                      <Button asChild variant="ghost" size="icon" aria-label="Edit">
+                        <Link href={`/${slug}/admin/agenda/${e.id}`}>
+                          <Pencil />
+                        </Link>
+                      </Button>
+                      <DeleteButton action={deleteEvent.bind(null, slug, e.id)} confirmText="Hapus agenda ini?" />
+                    </div>
                   </li>
                 ))}
               </ul>
