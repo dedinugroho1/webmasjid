@@ -39,6 +39,8 @@ export function SettingsForm({
     timezone: tenant.timezone,
   });
   const [method, setMethod] = useState(prayer.calculationMethod);
+  const host = (process.env.NEXT_PUBLIC_APP_URL ?? "webmasjid.com").replace(/^https?:\/\//, "");
+  const cnameTarget = process.env.NEXT_PUBLIC_CUSTOM_DOMAIN_TARGET || host;
   const fe = state?.fieldErrors;
 
   return (
@@ -74,6 +76,28 @@ export function SettingsForm({
             <input type="checkbox" name="isPublished" defaultChecked={tenant.isPublished} className="accent-primary size-4" />
             Tampilkan masjid di direktori publik WebMasjid
           </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Domain Sendiri (opsional)</CardTitle>
+          <CardDescription>
+            Pakai alamat sendiri, mis. <b>masjidalikhlas.or.id</b>. Website tetap juga bisa diakses di {host}/{tenant.slug}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <Field label="Domain" htmlFor="customDomain" error={fe?.customDomain}>
+            <Input id="customDomain" name="customDomain" placeholder="masjidalikhlas.or.id" defaultValue={tenant.customDomain ?? ""} />
+          </Field>
+          <ol className="text-muted-foreground list-decimal space-y-1 pl-5 text-xs">
+            <li>
+              Di pengelola DNS domain Anda, buat record <b>CNAME</b> yang mengarah ke <code className="text-foreground">{cnameTarget}</code>{" "}
+              (untuk domain utama/apex, gunakan A record sesuai petunjuk hosting).
+            </li>
+            <li>Simpan domain di sini. Pengelola platform juga perlu menambahkan domain ini di hosting (mis. Vercel → Domains).</li>
+            <li>Halaman login & dashboard tetap melalui {host}.</li>
+          </ol>
         </CardContent>
       </Card>
 
