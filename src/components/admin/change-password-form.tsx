@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionForm } from "@/hooks/use-action-form";
 import { Loader2 } from "lucide-react";
 import type { PasswordState } from "@/app/[slug]/admin/akun/actions";
 import { Field } from "@/components/auth/field";
@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 type Action = (prev: PasswordState, formData: FormData) => Promise<PasswordState>;
 
 export function ChangePasswordForm({ action }: { action: Action }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionForm(action, null);
   const fe = state?.fieldErrors;
   return (
-    <form action={formAction} className="grid gap-4 sm:grid-cols-3 sm:items-start">
+    <form onSubmit={formAction} className="grid gap-4 sm:grid-cols-3 sm:items-start">
       <Field label="Password saat ini" htmlFor="currentPassword" error={fe?.currentPassword}>
         <Input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" required />
       </Field>
