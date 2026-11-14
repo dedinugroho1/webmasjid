@@ -12,7 +12,8 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { CITIES } from "@/lib/cities";
 import { TIMEZONES } from "@/lib/constants";
-import { CALCULATION_METHODS } from "@/lib/prayer";
+import { CALCULATION_METHODS, type PrayerKey } from "@/lib/prayer";
+import { PrayerTuning } from "./prayer-tuning";
 
 type Action = (prev: SettingsFormState, formData: FormData) => Promise<SettingsFormState>;
 
@@ -23,7 +24,12 @@ export function SettingsForm({
 }: {
   action: Action;
   tenant: Tenant;
-  prayer: { calculationMethod: string; iqomahOffsetMinutes: number };
+  prayer: {
+    calculationMethod: string;
+    iqomahOffsetMinutes: number;
+    adjustments: Partial<Record<PrayerKey, number>>;
+    iqomahMinutes: Partial<Record<PrayerKey, number>>;
+  };
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const [loc, setLoc] = useState({
@@ -32,6 +38,7 @@ export function SettingsForm({
     longitude: String(tenant.longitude ?? ""),
     timezone: tenant.timezone,
   });
+  const [method, setMethod] = useState(prayer.calculationMethod);
   const fe = state?.fieldErrors;
 
   return (
@@ -110,7 +117,7 @@ export function SettingsForm({
             </NativeSelect>
           </Field>
           <Field label="Metode Perhitungan" htmlFor="calculationMethod" error={fe?.calculationMethod}>
-            <NativeSelect id="calculationMethod" name="calculationMethod" defaultValue={prayer.calculationMethod}>
+            <NativeSelect id="calculationMethod" name="calculationMethod" value={method} onChange={(e) => setMethod(e.target.value)}>
               {Object.entries(CALCULATION_METHODS).map(([v, l]) => (
                 <option key={v} value={v}>
                   {l}
@@ -118,9 +125,16 @@ export function SettingsForm({
               ))}
             </NativeSelect>
           </Field>
-          <Field label="Jeda Iqomah (menit setelah adzan)" htmlFor="iqomahOffsetMinutes" error={fe?.iqomahOffsetMinutes}>
-            <Input id="iqomahOffsetMinutes" name="iqomahOffsetMinutes" type="number" min={0} max={60} defaultValue={prayer.iqomahOffsetMinutes} />
-          </Field>
+          <PrayerTuning
+            latitude={Number(loc.latitude)}
+            longitude={Number(loc.longitude)}
+            timezone={loc.timezone}
+            method={method}
+            initialAdjustments={prayer.adjustments}
+            initialIqomah={prayer.iqomahMinutes}
+            defaultIqomah={prayer.iqomahOffsetMinutes}
+            errors={fe}
+          />
         </CardContent>
       </Card>
 

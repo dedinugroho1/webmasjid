@@ -36,7 +36,23 @@ export type PrayerConfig = {
   longitude: number;
   timezone: string;
   method?: string;
+  /** Koreksi menit per waktu (subuh, syuruq, dzuhur, ashar, maghrib, isya). */
+  adjustments?: Partial<Record<PrayerKey, number>>;
 };
+
+export type IqomahConfig = {
+  iqomahOffsetMinutes: number;
+  iqomahMinutes?: Partial<Record<PrayerKey, number>>;
+};
+
+/** Batas koreksi yang diizinkan (menit). */
+export const MAX_ADJUSTMENT = 30;
+export const ADJUSTABLE_PRAYERS: PrayerKey[] = ["subuh", "syuruq", "dzuhur", "ashar", "maghrib", "isya"];
+
+/** Jeda iqomah (menit) untuk waktu sholat tertentu. */
+export function iqomahFor(config: IqomahConfig, key: PrayerKey) {
+  return config.iqomahMinutes?.[key] ?? config.iqomahOffsetMinutes;
+}
 
 export type PrayerSchedule = { key: PrayerKey; label: string; time: Date }[];
 
@@ -76,15 +92,19 @@ export function getPrayerSchedule(config: PrayerConfig, at: Date = new Date(), d
   const params = getParams(config.method);
   params.madhab = Madhab.Shafi;
   const pt = new PrayerTimes(new Coordinates(config.latitude, config.longitude), date, params);
-  const imsak = new Date(pt.fajr.getTime() - 10 * 60_000);
+  const adj = (key: PrayerKey, d: Date) => {
+    const minutes = Math.max(-MAX_ADJUSTMENT, Math.min(MAX_ADJUSTMENT, Math.round(config.adjustments?.[key] ?? 0)));
+    return new Date(d.getTime() + minutes * 60_000);
+  };
+  const subuh = adj("subuh", pt.fajr);
   const times: Record<PrayerKey, Date> = {
-    imsak,
-    subuh: pt.fajr,
-    syuruq: pt.sunrise,
-    dzuhur: pt.dhuhr,
-    ashar: pt.asr,
-    maghrib: pt.maghrib,
-    isya: pt.isha,
+    imsak: new Date(subuh.getTime() - 10 * 60_000),
+    subuh,
+    syuruq: adj("syuruq", pt.sunrise),
+    dzuhur: adj("dzuhur", pt.dhuhr),
+    ashar: adj("ashar", pt.asr),
+    maghrib: adj("maghrib", pt.maghrib),
+    isya: adj("isya", pt.isha),
   };
   return (Object.keys(PRAYER_LABELS) as PrayerKey[]).map((key) => ({
     key,

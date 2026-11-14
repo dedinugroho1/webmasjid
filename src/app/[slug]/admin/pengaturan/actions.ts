@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { prayerSettings, tenants, type BankAccount } from "@/db/schema";
+import { prayerSettings, tenants, type BankAccount, type IqomahMinutes, type PrayerAdjustments } from "@/db/schema";
 import { TIMEZONES } from "@/lib/constants";
-import { CALCULATION_METHODS } from "@/lib/prayer";
+import { ADJUSTABLE_PRAYERS, CALCULATION_METHODS, FARDH_PRAYERS, MAX_ADJUSTMENT } from "@/lib/prayer";
 import { requireTenantAccess } from "@/lib/session";
 import { uploadImage } from "@/lib/storage";
 
@@ -34,10 +34,34 @@ const settingsSchema = z.object({
   longitude: z.coerce.number().min(-180).max(180),
   timezone: z.enum(TIMEZONES.map((t) => t.value) as [string, ...string[]]),
   calculationMethod: z.enum(Object.keys(CALCULATION_METHODS) as [string, ...string[]]),
-  iqomahOffsetMinutes: z.coerce.number().int().min(0).max(60),
   bankAccounts: z.string().max(2000).optional(),
   isPublished: z.literal("on").optional(),
 });
+
+/** Baca koreksi per waktu (adj_subuh, …) & iqomah per waktu (iqomah_subuh, …). */
+function parsePrayerTuning(formData: FormData) {
+  const errors: Record<string, string[]> = {};
+  const num = (name: string, min: number, max: number) => {
+    const raw = String(formData.get(name) ?? "").trim();
+    if (raw === "") return 0;
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < min || n > max) {
+      errors[name] = [`Isi bilangan bulat ${min} s.d. ${max}`];
+      return 0;
+    }
+    return n;
+  };
+  const adjustments: PrayerAdjustments = {};
+  for (const k of ADJUSTABLE_PRAYERS) {
+    const v = num(`adj_${k}`, -MAX_ADJUSTMENT, MAX_ADJUSTMENT);
+    if (v) adjustments[k as keyof PrayerAdjustments] = v;
+  }
+  const iqomahMinutes: IqomahMinutes = {};
+  for (const k of FARDH_PRAYERS) {
+    iqomahMinutes[k as keyof IqomahMinutes] = num(`iqomah_${k}`, 0, 60);
+  }
+  return { adjustments, iqomahMinutes, errors };
+}
 
 /** Format per baris: "Bank | Nomor Rekening | Atas Nama". */
 function parseBankAccounts(input?: string): BankAccount[] {
@@ -56,6 +80,8 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
   const parsed = settingsSchema.safeParse(raw);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const d = parsed.data;
+  const tuning = parsePrayerTuning(formData);
+  if (Object.keys(tuning.errors).length) return { fieldErrors: tuning.errors };
 
   const images: Partial<Record<"logoUrl" | "qrisUrl" | "coverUrl", string | null>> = {};
   try {
@@ -93,10 +119,15 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
 
     await tx
       .insert(prayerSettings)
-      .values({ tenantId: tenant.id, calculationMethod: d.calculationMethod, iqomahOffsetMinutes: d.iqomahOffsetMinutes })
+      .values({
+        tenantId: tenant.id,
+        calculationMethod: d.calculationMethod,
+        adjustments: tuning.adjustments,
+        iqomahMinutes: tuning.iqomahMinutes,
+      })
       .onConflictDoUpdate({
         target: prayerSettings.tenantId,
-        set: { calculationMethod: d.calculationMethod, iqomahOffsetMinutes: d.iqomahOffsetMinutes },
+        set: { calculationMethod: d.calculationMethod, adjustments: tuning.adjustments, iqomahMinutes: tuning.iqomahMinutes },
       });
   });
 

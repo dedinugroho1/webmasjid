@@ -48,6 +48,11 @@ export type TransactionType = (typeof transactionTypeEnum.enumValues)[number];
 export type CashFund = (typeof cashFundEnum.enumValues)[number];
 export type EventType = (typeof eventTypeEnum.enumValues)[number];
 
+/** Koreksi (menit, boleh negatif) per waktu: subuh, syuruq, dzuhur, ashar, maghrib, isya. */
+export type PrayerAdjustments = Partial<Record<"subuh" | "syuruq" | "dzuhur" | "ashar" | "maghrib" | "isya", number>>;
+/** Jeda iqomah (menit) per waktu sholat wajib. */
+export type IqomahMinutes = Partial<Record<"subuh" | "dzuhur" | "ashar" | "maghrib" | "isya", number>>;
+
 export type BankAccount = {
   bank: string;
   number: string;
@@ -217,7 +222,12 @@ export const prayerSettings = pgTable(
       .references(() => tenants.id, { onDelete: "cascade" }),
     /** Lihat `CALCULATION_METHODS` di src/lib/prayer.ts. Default: KEMENAG. */
     calculationMethod: text("calculation_method").notNull().default("KEMENAG"),
+    /** Jeda iqomah bawaan bila `iqomah_minutes` untuk suatu waktu tidak diisi. */
     iqomahOffsetMinutes: integer("iqomah_offset_minutes").notNull().default(10),
+    /** Koreksi jadwal per waktu agar sama dengan jadwal masjid setempat. */
+    adjustments: jsonb("adjustments").$type<PrayerAdjustments>().notNull().default({}),
+    /** Jeda iqomah per waktu, mis. { subuh: 15, maghrib: 5 }. */
+    iqomahMinutes: jsonb("iqomah_minutes").$type<IqomahMinutes>().notNull().default({}),
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex("prayer_settings_tenant_uidx").on(t.tenantId)],
