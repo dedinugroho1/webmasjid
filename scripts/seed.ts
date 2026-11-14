@@ -12,7 +12,7 @@ import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "../src/db";
-import { accounts, cashTransactions, events, prayerSettings, tenants, users } from "../src/db/schema";
+import { accounts, announcements, cashTransactions, events, prayerSettings, tenants, users } from "../src/db/schema";
 
 const SLUG = "al-ikhlas";
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@webmasjid.test";
@@ -126,6 +126,23 @@ async function main() {
     { tenantId: tenant.id, type: "KAJIAN", title: "Kajian Tafsir Juz 30", speaker: "Ust. Abdullah Syafi'i", dateTime: at(2, 5, 15), location: "Ruang utama", description: "Rutin setiap Ahad ba'da Subuh. Terbuka untuk umum." },
     { tenantId: tenant.id, type: "KAJIAN", title: "Kajian Muslimah: Fiqih Keluarga", speaker: "Ustadzah Fatimah", dateTime: at(4, 16, 0), location: "Lantai 2" },
     { tenantId: tenant.id, type: "SOSIAL", title: "Santunan Anak Yatim & Dhuafa", dateTime: at(10, 9, 0), location: "Halaman masjid", description: "Penyaluran 50 paket sembako." },
+  ]);
+
+  console.log("📣 Mengisi pengumuman…");
+  await db.insert(announcements).values([
+    {
+      tenantId: tenant.id,
+      title: "Renovasi Tempat Wudhu Putra",
+      body: "Mulai Senin depan tempat wudhu putra direnovasi selama ±2 pekan. Jamaah dipersilakan berwudhu di sisi selatan masjid. Jazakumullahu khairan atas pengertiannya.",
+      isPinned: true,
+      createdBy: userId,
+    },
+    {
+      tenantId: tenant.id,
+      title: "Pendaftaran TPA Angkatan Baru",
+      body: "Pendaftaran santri TPA (usia 5–12 tahun) dibuka hingga akhir bulan. Hubungi sekretariat DKM ba'da Maghrib.",
+      createdBy: userId,
+    },
   ]);
 
   console.log(`\n✅ Selesai! Buka http://localhost:3000/${SLUG}`);

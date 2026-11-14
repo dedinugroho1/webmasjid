@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarDays, HandCoins, Landmark, Mail, MapPin, Phone } from "lucide-react";
+import { CalendarDays, HandCoins, Images, Landmark, Mail, MapPin, Megaphone, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnnouncementList } from "@/components/masjid/announcement-list";
 import { BankAccounts } from "@/components/masjid/bank-accounts";
 import { CashSummary } from "@/components/masjid/cash-summary";
 import { EventList } from "@/components/masjid/event-list";
+import { GalleryGrid } from "@/components/masjid/gallery-grid";
 import { PrayerWidget } from "@/components/masjid/prayer-widget";
 import { QrisCard } from "@/components/masjid/qris-card";
 import { getBalances, listTransactions } from "@/lib/finance";
-import { getPrayerConfig, getPublicTenantBySlug, getUpcomingEvents } from "@/lib/tenant";
+import { getActiveAnnouncements, getGallery, getPrayerConfig, getPublicTenantBySlug, getUpcomingEvents } from "@/lib/tenant";
 import { appUrl } from "@/lib/utils";
 
 // Data kas & agenda selalu segar; halaman dirender per permintaan.
@@ -35,11 +37,13 @@ export default async function MasjidPage({ params }: Props) {
   const tenant = await getPublicTenantBySlug(slug);
   if (!tenant) notFound();
 
-  const [prayerConfig, balances, recent, upcoming] = await Promise.all([
+  const [prayerConfig, balances, recent, upcoming, news, gallery] = await Promise.all([
     getPrayerConfig(tenant),
     getBalances(tenant.id),
     listTransactions(tenant.id, { limit: 10 }),
     getUpcomingEvents(tenant.id, 8),
+    getActiveAnnouncements(tenant.id, 5),
+    getGallery(tenant.id, 12),
   ]);
 
   return (
@@ -86,6 +90,13 @@ export default async function MasjidPage({ params }: Props) {
       </header>
 
       <main className="mx-auto grid max-w-5xl gap-10 px-4 py-8">
+        {news.length > 0 && (
+          <section aria-labelledby="pengumuman" className="grid gap-4">
+            <SectionTitle id="pengumuman" icon={<Megaphone />} title="Pengumuman" />
+            <AnnouncementList items={news} timeZone={tenant.timezone} />
+          </section>
+        )}
+
         <section aria-labelledby="jadwal">
           <h2 id="jadwal" className="sr-only">
             Jadwal Sholat
@@ -126,6 +137,13 @@ export default async function MasjidPage({ params }: Props) {
             <EventList events={upcoming} timeZone={tenant.timezone} />
           </section>
         </div>
+
+        {gallery.length > 0 && (
+          <section aria-labelledby="galeri" className="grid gap-4">
+            <SectionTitle id="galeri" icon={<Images />} title="Galeri Kegiatan" />
+            <GalleryGrid items={gallery.map(({ id, imageUrl, caption, takenAt }) => ({ id, imageUrl, caption, takenAt }))} />
+          </section>
+        )}
       </main>
 
       <footer className="text-muted-foreground border-t py-6 text-center text-xs">
