@@ -7,7 +7,7 @@ export const RESERVED_SLUGS = new Set([
   "register", "signup", "signin", "tv", "demo", "docs", "dokumentasi", "blog", "about",
   "tentang", "kontak", "contact", "privacy", "privasi", "terms", "syarat", "help", "bantuan",
   "static", "public", "assets", "_next", "favicon.ico", "robots.txt", "sitemap.xml",
-  "webmasjid", "www", "superadmin", "settings", "pengaturan", "donasi", "infaq", "jasa",
+  "webmasjid", "www", "undangan", "lupa-password", "reset-password", "superadmin", "settings", "pengaturan", "donasi", "infaq", "jasa",
 ]);
 
 export const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])$/;
