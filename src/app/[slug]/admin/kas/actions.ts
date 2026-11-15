@@ -8,7 +8,7 @@ import { db } from "@/db";
 import { cashTransactions } from "@/db/schema";
 import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
-import { uploadImage } from "@/lib/storage";
+import { deleteImage, uploadImage } from "@/lib/storage";
 
 export type KasFormState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
 
@@ -101,6 +101,10 @@ export async function deleteTransaction(slug: string, id: string) {
   const access = await requireTenantAccess(slug, [...KAS_ROLES]);
   const { tenant } = access;
   if (isReadOnlyDemo(access)) return;
-  await db.delete(cashTransactions).where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)));
+  const [removed] = await db
+    .delete(cashTransactions)
+    .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
+    .returning({ receiptUrl: cashTransactions.receiptUrl });
+  await deleteImage(removed?.receiptUrl);
   revalidatePath(`/${slug}`, "layout");
 }
