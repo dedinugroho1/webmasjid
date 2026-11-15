@@ -38,6 +38,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tenant) return { title: "Masjid tidak ditemukan" };
   return {
     title: tenant.name,
+    // Masjid yang belum disetujui tetap bisa dibuka lewat tautannya, tetapi tidak diindeks mesin pencari.
+    robots: tenant.approvedAt ? undefined : { index: false, follow: false },
     description:
       tenant.description ??
       `Jadwal sholat, agenda kajian, laporan kas transparan, dan infaq digital ${tenant.name}${tenant.city ? `, ${tenant.city}` : ""}.`,
