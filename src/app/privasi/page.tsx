@@ -41,6 +41,12 @@ export default function PrivasiPage() {
             agenda, pengumuman, dan foto galeri.
           </li>
           <li>
+            <b>Riwayat perubahan:</b> setiap penambahan, perubahan, dan penghapusan transaksi kas serta pengelolaan
+            pengurus dicatat bersama nama pelaku, waktu, dan ringkasan isinya, agar keuangan masjid dapat
+            dipertanggungjawabkan. Riwayat ini hanya terlihat oleh pengurus masjid yang bersangkutan dan ikut terhapus
+            bila masjid dihapus.
+          </li>
+          <li>
             <b>Data teknis:</b> alamat IP dan jenis perangkat/browser saat masuk (untuk keamanan sesi), serta penghitung
             percobaan masuk/daftar per alamat IP dan email (untuk mencegah penyalahgunaan).
           </li>
