@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { galleryItems } from "@/db/schema";
 import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
-import { uploadImage } from "@/lib/storage";
+import { deleteImage, uploadImage } from "@/lib/storage";
 
 export type GalleryState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
 
@@ -49,6 +49,10 @@ export async function deleteGalleryItem(slug: string, id: string) {
   const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
   const { tenant } = access;
   if (isReadOnlyDemo(access)) return;
-  await db.delete(galleryItems).where(and(eq(galleryItems.id, id), eq(galleryItems.tenantId, tenant.id)));
+  const [removed] = await db
+    .delete(galleryItems)
+    .where(and(eq(galleryItems.id, id), eq(galleryItems.tenantId, tenant.id)))
+    .returning({ imageUrl: galleryItems.imageUrl });
+  await deleteImage(removed?.imageUrl);
   revalidatePath(`/${slug}`, "layout");
 }
