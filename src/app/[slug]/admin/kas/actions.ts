@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { cashTransactions } from "@/db/schema";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 import { uploadImage } from "@/lib/storage";
 
@@ -38,7 +39,9 @@ function parseTransaction(formData: FormData) {
 }
 
 export async function createTransaction(slug: string, _prev: KasFormState, formData: FormData): Promise<KasFormState> {
-  const { tenant, user } = await requireTenantAccess(slug, [...KAS_ROLES]);
+  const access = await requireTenantAccess(slug, [...KAS_ROLES]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parseTransaction(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
@@ -67,7 +70,9 @@ export async function updateTransaction(
   _prev: KasFormState,
   formData: FormData,
 ): Promise<KasFormState> {
-  const { tenant } = await requireTenantAccess(slug, [...KAS_ROLES]);
+  const access = await requireTenantAccess(slug, [...KAS_ROLES]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parseTransaction(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
 
@@ -93,7 +98,9 @@ export async function updateTransaction(
 }
 
 export async function deleteTransaction(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, [...KAS_ROLES]);
+  const access = await requireTenantAccess(slug, [...KAS_ROLES]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db.delete(cashTransactions).where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)));
   revalidatePath(`/${slug}`, "layout");
 }
