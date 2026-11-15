@@ -401,12 +401,17 @@ test("17. hapus masjid: halaman, akun, dan foto di Bunny ikut terhapus", async (
   await expect(page.getByText(/telah dihapus permanen/)).toBeVisible();
   expect((await page.request.get(`/${SLUG}`)).status()).toBe(404);
 
-  if (process.env.BUNNY_CDN_URL && galleryPhoto?.startsWith(process.env.BUNNY_CDN_URL.replace(/\/+$/, ""))) {
+  // File di penyimpanan asal Bunny harus hilang. (Alamat CDN bisa tetap menyajikan salinan cache
+  // sebentar, jadi yang diperiksa adalah penyimpanan asalnya, bukan CDN.) Butuh password zone di environment tes.
+  const { BUNNY_STORAGE_ZONE: zone, BUNNY_STORAGE_PASSWORD: key, BUNNY_STORAGE_REGION: region } = process.env;
+  if (zone && key && galleryPhoto?.includes(".b-cdn.net/")) {
+    const host = region ? `${region}.storage.bunnycdn.com` : "storage.bunnycdn.com";
+    const path = new URL(galleryPhoto).pathname;
     let status = 200;
-    for (let i = 0; i < 20 && status !== 404; i++) {
-      status = (await page.request.get(galleryPhoto, { headers: { "Cache-Control": "no-cache" } })).status();
-      if (status !== 404) await page.waitForTimeout(3000);
+    for (let i = 0; i < 10 && status !== 404; i++) {
+      status = (await fetch(`https://${host}/${zone}${path}`, { headers: { AccessKey: key } })).status;
+      if (status !== 404) await page.waitForTimeout(2000);
     }
-    expect(status, "foto di CDN harus hilang setelah masjid dihapus").toBe(404);
+    expect(status, "file di Bunny Storage harus terhapus").toBe(404);
   }
 });
