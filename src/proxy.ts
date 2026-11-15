@@ -18,7 +18,7 @@ import { getSetupProblem, setupPageHtml } from "@/lib/setup-status";
 /** Path yang selalu dilayani domain utama (auth, admin, API). */
 const REDIRECT_HEADER = "x-webmasjid-redirect-to";
 
-const PLATFORM_ONLY = /^\/(?:masuk|daftar|undangan|lupa-password|reset-password|superadmin|api)(?:\/|$)/;
+const PLATFORM_ONLY = /^\/(?:masuk|daftar|undangan|lupa-password|reset-password|privasi|syarat|superadmin|api)(?:\/|$)/;
 
 /**
  * Redirect ke domain utama lewat route handler internal (lihat
