@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { announcements } from "@/db/schema";
 import { localInputToDate } from "@/lib/format";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 
 export type AnnouncementState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
@@ -26,7 +27,9 @@ function parse(formData: FormData) {
 }
 
 export async function createAnnouncement(slug: string, _prev: AnnouncementState, formData: FormData): Promise<AnnouncementState> {
-  const { tenant, user } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parse(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const d = parsed.data;
@@ -48,7 +51,9 @@ export async function updateAnnouncement(
   _prev: AnnouncementState,
   formData: FormData,
 ): Promise<AnnouncementState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parse(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const d = parsed.data;
@@ -68,7 +73,9 @@ export async function updateAnnouncement(
 }
 
 export async function togglePin(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db
     .update(announcements)
     .set({ isPinned: not(announcements.isPinned) })
@@ -77,7 +84,9 @@ export async function togglePin(slug: string, id: string) {
 }
 
 export async function deleteAnnouncement(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db.delete(announcements).where(and(eq(announcements.id, id), eq(announcements.tenantId, tenant.id)));
   revalidatePath(`/${slug}`, "layout");
 }
