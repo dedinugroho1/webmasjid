@@ -112,3 +112,28 @@ export async function deleteImage(url: string | null | undefined): Promise<void>
     console.error("[storage] Bunny hapus gagal:", (e as Error).message);
   }
 }
+
+/**
+ * Hapus seluruh folder (rekursif) di Bunny, mis. `{tenantId}` saat masjid dihapus.
+ * Tidak pernah melempar error; mengembalikan `true` bila folder terhapus atau memang tidak ada.
+ */
+export async function deleteFolder(prefix: string): Promise<boolean> {
+  const bunny = bunnyConfig();
+  if (!bunny) return true;
+  // Hanya awalan sederhana (UUID/slug); tolak path kosong atau traversal.
+  if (!/^[A-Za-z0-9][A-Za-z0-9/_-]*$/.test(prefix) || prefix.includes("..")) return false;
+  try {
+    const res = await fetch(`${objectUrl(bunny, prefix.replace(/\/+$/, ""))}/`, {
+      method: "DELETE",
+      headers: { AccessKey: bunny.accessKey },
+    });
+    if (!res.ok && res.status !== 404) {
+      console.error(`[storage] Bunny hapus folder gagal: HTTP ${res.status}`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[storage] Bunny hapus folder gagal:", (e as Error).message);
+    return false;
+  }
+}

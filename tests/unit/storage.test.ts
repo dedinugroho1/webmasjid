@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { bunnyConfig, deleteImage, uploadImage } from "@/lib/storage";
+import { bunnyConfig, deleteFolder, deleteImage, uploadImage } from "@/lib/storage";
 
 const ENV = {
   BUNNY_STORAGE_ZONE: "webmasjid",
@@ -118,6 +118,34 @@ describe("uploadImage / deleteImage", () => {
 
   it("deleteImage: tanpa Bunny tidak melakukan apa pun", async () => {
     await deleteImage("https://webmasjid.b-cdn.net/t/a.png");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("deleteFolder: hapus rekursif dengan garis miring di akhir; awalan berbahaya ditolak", async () => {
+    useBunny();
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
+    expect(await deleteFolder("89c0b05c-0f1b-422f-9241-99ad7889cc6f")).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://sg.storage.bunnycdn.com/webmasjid/89c0b05c-0f1b-422f-9241-99ad7889cc6f/",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+
+    fetchMock.mockClear();
+    for (const bad of ["", "/", "../x", "a/../b", "a b", "*"]) expect(await deleteFolder(bad)).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
+    expect(await deleteFolder("tenant-lama")).toBe(true); // sudah tidak ada
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 500 }));
+    expect(await deleteFolder("tenant-x")).toBe(false);
+    fetchMock.mockRejectedValueOnce(new Error("timeout"));
+    expect(await deleteFolder("tenant-x")).toBe(false);
+    spy.mockRestore();
+  });
+
+  it("deleteFolder: tanpa Bunny dianggap sukses tanpa memanggil apa pun", async () => {
+    expect(await deleteFolder("tenant-x")).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
