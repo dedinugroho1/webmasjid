@@ -124,6 +124,8 @@ Panduan self-host lain (VPS/Docker, domain sendiri): **[docs/SELF-HOSTING.md](do
 3. Semua query tulis memakai `tenant.id` hasil verifikasi — **tidak pernah** dari input form.
 4. Role: `DKM_ADMIN` (semua modul), `BENDAHARA` (buku kas saja), `SUPERADMIN` (semua masjid & panel platform).
 5. Rate limit login/daftar/reset password/undangan (per-IP & per-email) disimpan di database.
+6. Anti-spam pendaftaran: honeypot, token waktu bertanda tangan (kiriman < 3 detik ditolak),
+   email sekali pakai ditolak, dan nama berisi tautan/promosi ditolak.
 
 ## 🗺️ Roadmap
 
