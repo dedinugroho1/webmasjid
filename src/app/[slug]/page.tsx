@@ -41,7 +41,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description:
       tenant.description ??
       `Jadwal sholat, agenda kajian, laporan kas transparan, dan infaq digital ${tenant.name}${tenant.city ? `, ${tenant.city}` : ""}.`,
-    openGraph: { images: tenant.coverUrl && !tenant.coverUrl.startsWith("data:") ? [tenant.coverUrl] : undefined },
   };
 }
 
