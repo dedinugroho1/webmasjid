@@ -3,7 +3,7 @@ import { GitBranch, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { githubUrl } from "@/lib/utils";
 
-export function SiteHeader() {
+export function SiteHeader({ showServices = true, showDonation = true }: { showServices?: boolean; showDonation?: boolean }) {
   return (
     <header className="bg-background/80 sticky top-0 z-30 border-b backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
@@ -14,8 +14,12 @@ export function SiteHeader() {
           <a href="#fitur" className="hover:text-foreground">Fitur</a>
           <a href="#direktori" className="hover:text-foreground">Direktori</a>
           <a href="#open-source" className="hover:text-foreground">Self-Host</a>
-          <a href="#jasa" className="hover:text-foreground">Jasa Pasang</a>
-          <a href="#donasi" className="hover:text-foreground">Donasi</a>
+          {showServices && (
+            <a href="#jasa" className="hover:text-foreground">Jasa Pasang</a>
+          )}
+          {showDonation && (
+            <a href="#donasi" className="hover:text-foreground">Donasi</a>
+          )}
         </nav>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="icon" aria-label="GitHub">
