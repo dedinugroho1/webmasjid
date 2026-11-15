@@ -12,6 +12,7 @@ import { CITIES, DEFAULT_CITY } from "@/lib/cities";
 import { DEFAULT_RUNNING_TEXT } from "@/lib/constants";
 import { checkLimits, clientIp, LIMITS } from "@/lib/rate-limit";
 import { isValidSlug } from "@/lib/reserved-slugs";
+import { isDisposableEmail, looksLikeSpamText, verifyFormToken } from "@/lib/spam";
 import { registrationOpen } from "@/lib/utils";
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
@@ -87,6 +88,25 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const data = parsed.data;
+
+  // Pemeriksaan ringan anti-spam.
+  const timing = verifyFormToken(formData.get("formToken"));
+  if (!timing.ok) {
+    return {
+      error:
+        timing.reason === "too-fast"
+          ? "Formulir dikirim terlalu cepat. Periksa kembali isian Anda, lalu kirim ulang."
+          : "Sesi formulir sudah kedaluwarsa. Muat ulang halaman, lalu coba lagi.",
+    };
+  }
+  if (isDisposableEmail(data.email)) {
+    return { fieldErrors: { email: ["Gunakan email aktif (bukan email sementara/sekali pakai)"] } };
+  }
+  const spamFields: Record<string, string[] | undefined> = {};
+  if (looksLikeSpamText(data.masjidName)) spamFields.masjidName = ["Nama masjid tidak boleh berisi tautan atau promosi"];
+  if (looksLikeSpamText(data.adminName)) spamFields.adminName = ["Nama pengurus tidak valid"];
+  if (data.address && /https?:\/\/|www\./i.test(data.address)) spamFields.address = ["Alamat tidak boleh berisi tautan"];
+  if (Object.keys(spamFields).length) return { fieldErrors: spamFields };
 
   const limited = await checkLimits([{ key: `register:ip:${await clientIp()}`, rule: LIMITS.registerPerIp }]);
   if (limited) return { error: limited };
