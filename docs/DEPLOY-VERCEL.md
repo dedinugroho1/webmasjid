@@ -69,6 +69,12 @@ Tanpa konfigurasi ini foto tetap bisa diunggah, tetapi disimpan di database (mak
 
 Foto lama otomatis dihapus dari Bunny ketika diganti, dihapus, atau transaksinya dihapus.
 
+> **Cache CDN:** setelah file dihapus dari Storage Zone, CDN masih dapat menyajikan salinan cache lewat alamat
+> langsungnya sampai masa cache berakhir (foto tidak lagi tampil di website mana pun). Agar jeda ini singkat,
+> buka **Pull Zone → Caching** dan turunkan *Cache Expiration Time* (mis. 1 jam). Nama file berupa UUID acak dan
+> tidak pernah ditimpa, jadi cache yang singkat hanya menambah sedikit permintaan ke storage asal (trafik storage →
+> CDN di Bunny tidak ditagih).
+
 ## 4. Deploy & uji
 
 1. **Deployments → Redeploy** (atau push commit apa saja).
