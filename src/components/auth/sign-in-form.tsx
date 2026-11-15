@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "./field";
 
-export function SignInForm({ next }: { next?: string }) {
+export function SignInForm({ next, defaultEmail, defaultPassword }: { next?: string; defaultEmail?: string; defaultPassword?: string }) {
   const [state, action, pending] = useActionForm(signInAction, null);
   return (
     <form onSubmit={action} className="grid gap-4">
       <input type="hidden" name="next" value={next ?? ""} />
       <Field label="Email" htmlFor="email" error={state?.fieldErrors?.email}>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+        <Input id="email" name="email" type="email" autoComplete="email" defaultValue={defaultEmail} required />
       </Field>
       <Field label="Password" htmlFor="password" error={state?.fieldErrors?.password}>
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
+        <Input id="password" name="password" type="password" autoComplete="current-password" defaultValue={defaultPassword} required />
       </Field>
       {state?.error && <p className="text-destructive text-sm">{state.error}</p>}
       <Button type="submit" disabled={pending}>
