@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { CITIES } from "@/lib/cities";
 import { slugify } from "@/lib/utils";
+import { ConsentCheckbox } from "./consent-checkbox";
 import { Field } from "./field";
 
 export function RegisterForm({ baseUrl, formToken }: { baseUrl: string; formToken: string }) {
@@ -84,6 +85,7 @@ export function RegisterForm({ baseUrl, formToken }: { baseUrl: string; formToke
           <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
         </Field>
       </div>
+      <ConsentCheckbox error={state?.fieldErrors?.consent} />
       {state?.error && <p className="text-destructive text-sm">{state.error}</p>}
       <Button type="submit" size="lg" disabled={pending}>
         {pending && <Loader2 className="animate-spin" />} Daftarkan Masjid — Gratis
