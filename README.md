@@ -27,6 +27,7 @@ Proyek amal jariyah digital: ribuan masjid bisa memiliki website sendiri di satu
 | 📊 **Ekspor Excel** | Buku kas per bulan atau seluruh riwayat ke CSV (format Excel Indonesia). |
 | 🧪 **Mode Demo** | Masjid demo bisa dijelajahi siapa saja lewat tombol *Coba Dashboard Demo*; semua perubahan ditolak sehingga demo tetap rapi. |
 | 📱 **PWA & Pratinjau Tautan** | Bisa dipasang di layar utama HP; link masjid tampil dengan gambar pratinjau saat dibagikan ke WhatsApp. Sitemap & robots.txt otomatis. |
+| 🗑️ **Privasi & Hak Data** | Kebijakan Privasi & Syarat Ketentuan, persetujuan saat daftar, dan **Hapus Masjid** (seluruh data, akun, dan foto) oleh Admin DKM. |
 | 🛡️ **Keamanan** | Isolasi multi-tenant, rate limit login/daftar/reset (berbasis DB), honeypot anti-bot, panel **superadmin** untuk menangguhkan pendaftaran palsu. |
 
 ## 🧱 Tech Stack
@@ -97,6 +98,8 @@ npm run dev
 ```
 
 Buka <http://localhost:3000>. Akun demo: `admin@webmasjid.test` / `demo12345` → `/al-ikhlas/admin`.
+
+Siap launch? Ikuti **[docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md)** dan **[docs/BACKUP.md](docs/BACKUP.md)**.
 
 Deploy otomatis dari GitHub ke Vercel (preview per branch): **[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)**.
 Panduan self-host lain (VPS/Docker, domain sendiri): **[docs/SELF-HOSTING.md](docs/SELF-HOSTING.md)**.
