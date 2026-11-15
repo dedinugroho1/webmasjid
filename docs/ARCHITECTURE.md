@@ -107,7 +107,7 @@ ringkasan saldo awal/masuk/keluar/akhir per kas, rincian transaksi, dan kolom ta
 
 `src/lib/audit.ts` (logika murni: potret transaksi, perbandingan sebelum/sesudah, ringkasan berbahasa Indonesia) dan
 `src/lib/audit-log.ts` (tulis/baca). Setiap tambah, ubah, dan hapus transaksi kas, serta undangan, perubahan peran,
-pengeluaran pengurus, dan reset password, ditulis ke tabel `audit_logs` **di dalam transaksi database yang sama** dengan
+mengeluarkan pengurus dari masjid, dan reset password, ditulis ke tabel `audit_logs` **di dalam transaksi database yang sama** dengan
 perubahannya, sehingga tidak pernah ada perubahan tanpa jejak. Nama pelaku disalin (snapshot) agar tetap terbaca bila akunnya
 dihapus. Aplikasi hanya menyediakan penulisan dan pembacaan; tidak ada fitur mengubah atau menghapus riwayat. Riwayat ikut
 terhapus (cascade) saat masjid dihapus.
