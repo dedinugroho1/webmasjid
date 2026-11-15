@@ -1,138 +1,131 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { count, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
-import { Landmark, Search } from "lucide-react";
-import { db } from "@/db";
-import { cashTransactions, tenants, users } from "@/db/schema";
+import { Download, Search } from "lucide-react";
+import { PlatformSwitches } from "@/components/admin/platform-switches";
 import { SuperadminRow } from "@/components/admin/superadmin-row";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PaginationLinks } from "@/components/ui/pagination-links";
 import { formatDate } from "@/lib/format";
-import { requireSuperadmin } from "@/lib/session";
-import { changeSlug, setPublished, suspendTenant, unsuspendTenant } from "./actions";
+import { getPlatformSettings } from "@/lib/platform-settings";
+import { listTenantsForAdmin, parseTenantFilter, parseTenantSort, platformStats } from "@/lib/superadmin-queries";
+import { approveTenant, changeSlug, setModerationEnabled, setPublished, setRegistrationOpen, suspendTenant, unsuspendTenant } from "./actions";
 
 export const metadata: Metadata = { title: "Superadmin", robots: { index: false } };
-export const dynamic = "force-dynamic";
 
-export default async function SuperadminPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
-  const me = await requireSuperadmin();
-  const { q = "", status = "" } = await searchParams;
+type Props = { searchParams: Promise<{ q?: string; status?: string; urut?: string; hal?: string }> };
 
-  const filters = [];
-  if (q.trim()) {
-    const like = `%${q.trim()}%`;
-    filters.push(or(ilike(tenants.name, like), ilike(tenants.slug, like), ilike(tenants.city, like)));
-  }
-  if (status === "suspended") filters.push(isNotNull(tenants.suspendedAt));
+export default async function SuperadminPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const q = sp.q ?? "";
+  const filter = parseTenantFilter(sp.status);
+  const sort = parseTenantSort(sp.urut);
+  const page = Math.max(1, Number(sp.hal) || 1);
 
-  const memberCount = db
-    .select({ tenantId: users.tenantId, n: count().as("members") })
-    .from(users)
-    .groupBy(users.tenantId)
-    .as("m");
-  const txCount = db
-    .select({ tenantId: cashTransactions.tenantId, n: count().as("transactions") })
-    .from(cashTransactions)
-    .groupBy(cashTransactions.tenantId)
-    .as("tx");
-
-  const [rows, [stats]] = await Promise.all([
-    db
-      .select({
-        id: tenants.id,
-        name: tenants.name,
-        slug: tenants.slug,
-        city: tenants.city,
-        createdAt: tenants.createdAt,
-        isPublished: tenants.isPublished,
-        suspendedAt: tenants.suspendedAt,
-        suspendReason: tenants.suspendReason,
-        members: sql<number>`coalesce(${memberCount.n}, 0)`.mapWith(Number),
-        transactions: sql<number>`coalesce(${txCount.n}, 0)`.mapWith(Number),
-      })
-      .from(tenants)
-      .leftJoin(memberCount, eq(memberCount.tenantId, tenants.id))
-      .leftJoin(txCount, eq(txCount.tenantId, tenants.id))
-      .where(filters.length ? sql.join(filters.map((f) => sql`(${f})`), sql` and `) : undefined)
-      .orderBy(desc(tenants.createdAt))
-      .limit(200),
-    db
-      .select({
-        total: count(),
-        suspended: sql<number>`count(*) filter (where ${tenants.suspendedAt} is not null)`.mapWith(Number),
-        last30: sql<number>`count(*) filter (where ${tenants.createdAt} > now() - interval '30 days')`.mapWith(Number),
-      })
-      .from(tenants),
+  const [settings, stats, list] = await Promise.all([
+    getPlatformSettings(),
+    platformStats(),
+    listTenantsForAdmin({ q, filter, sort, page }),
   ]);
-  const [{ users: totalUsers }] = await db.select({ users: count() }).from(users);
+
+  const query = (over: Record<string, string | number>) => {
+    const params = new URLSearchParams({ ...(q ? { q } : {}), status: filter, urut: sort, ...Object.fromEntries(Object.entries(over).map(([k, v]) => [k, String(v)])) });
+    return `/superadmin?${params.toString()}`;
+  };
+  const exportHref = `/superadmin/ekspor?${new URLSearchParams({ ...(q ? { q } : {}), status: filter, urut: sort }).toString()}`;
 
   return (
-    <div className="bg-muted/40 min-h-dvh">
-      <header className="bg-background border-b">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Landmark className="text-primary size-5" /> WebMasjid · Superadmin
-          </Link>
-          <p className="text-muted-foreground text-xs">{me.email}</p>
-        </div>
-      </header>
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6">
-        <div className="grid gap-4 sm:grid-cols-4">
-          <Stat label="Total masjid" value={stats.total} />
-          <Stat label="Daftar 30 hari terakhir" value={stats.last30} />
-          <Stat label="Ditangguhkan" value={stats.suspended} />
-          <Stat label="Akun pengguna" value={totalUsers} />
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Semua Masjid</CardTitle>
-            <CardDescription>Tangguhkan pendaftaran palsu, atur tampilan direktori, atau ubah slug.</CardDescription>
-            <form className="mt-2 flex flex-wrap gap-2" method="GET">
-              <Input name="q" defaultValue={q} placeholder="Cari nama, slug, atau kota…" className="max-w-xs" />
-              <label className="flex items-center gap-1.5 text-sm">
-                <input type="checkbox" name="status" value="suspended" defaultChecked={status === "suspended"} /> Hanya ditangguhkan
-              </label>
-              <Button type="submit" variant="outline">
-                <Search /> Cari
-              </Button>
-            </form>
-          </CardHeader>
-          <CardContent>
-            {rows.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Tidak ada masjid yang cocok.</p>
-            ) : (
-              <ul className="divide-y">
-                {rows.map((r) => (
-                  <SuperadminRow
-                    key={r.id}
-                    row={{
-                      ...r,
-                      createdAt: formatDate(r.createdAt),
-                      suspendedAt: r.suspendedAt?.toISOString() ?? null,
-                    }}
-                    onPublish={setPublished.bind(null, r.id)}
-                    onSuspend={suspendTenant.bind(null, r.id)}
-                    onUnsuspend={unsuspendTenant.bind(null, r.id)}
-                    onChangeSlug={changeSlug.bind(null, r.id)}
-                  />
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+    <>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Stat label="Total masjid" value={stats.total} />
+        <Stat label="Daftar 30 hari terakhir" value={stats.last30} />
+        <Stat label="Menunggu persetujuan" value={stats.pending} highlight={stats.pending > 0} href={query({ status: "menunggu", hal: 1 })} testId="stat-pending" />
+        <Stat label="Ditangguhkan" value={stats.suspended} />
+        <Stat label="Akun pengguna" value={stats.users} href="/superadmin/pengguna" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pengaturan Platform</CardTitle>
+          <CardDescription>Berlaku langsung tanpa deploy ulang.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PlatformSwitches
+            registrationOpen={settings.registrationOpen}
+            moderationEnabled={settings.moderationEnabled}
+            onRegistration={setRegistrationOpen}
+            onModeration={setModerationEnabled}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Semua Masjid</CardTitle>
+          <CardDescription>Setujui pendaftaran, tangguhkan yang palsu, hubungi admin, atau ubah alamat masjid.</CardDescription>
+          <form className="mt-2 flex flex-wrap items-center gap-2" method="GET">
+            <Input name="q" defaultValue={q} placeholder="Cari nama, alamat, kota, atau email admin…" className="max-w-xs" aria-label="Cari masjid" />
+            <NativeSelect name="status" defaultValue={filter} className="w-auto" aria-label="Filter status">
+              <option value="semua">Semua status</option>
+              <option value="menunggu">Menunggu persetujuan</option>
+              <option value="ditangguhkan">Ditangguhkan</option>
+            </NativeSelect>
+            <NativeSelect name="urut" defaultValue={sort} className="w-auto" aria-label="Urutkan">
+              <option value="terbaru">Terbaru</option>
+              <option value="nama">Nama A–Z</option>
+              <option value="transaksi">Transaksi terbanyak</option>
+              <option value="pengurus">Pengurus terbanyak</option>
+            </NativeSelect>
+            <Button type="submit" variant="outline">
+              <Search /> Cari
+            </Button>
+            <Button asChild variant="outline">
+              <a href={exportHref} download>
+                <Download /> Ekspor CSV
+              </a>
+            </Button>
+          </form>
+        </CardHeader>
+        <CardContent>
+          {list.rows.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Tidak ada masjid yang cocok.</p>
+          ) : (
+            <ul className="divide-y">
+              {list.rows.map((r) => (
+                <SuperadminRow
+                  key={r.id}
+                  row={{
+                    ...r,
+                    createdAt: formatDate(r.createdAt),
+                    approvedAt: r.approvedAt?.toISOString() ?? null,
+                    suspendedAt: r.suspendedAt?.toISOString() ?? null,
+                  }}
+                  onPublish={setPublished.bind(null, r.id)}
+                  onApprove={approveTenant.bind(null, r.id)}
+                  onSuspend={suspendTenant.bind(null, r.id)}
+                  onUnsuspend={unsuspendTenant.bind(null, r.id)}
+                  onChangeSlug={changeSlug.bind(null, r.id)}
+                />
+              ))}
+            </ul>
+          )}
+          <PaginationLinks page={list.page} pages={list.pages} total={list.total} noun="masjid" hrefFor={(p) => query({ hal: p })} />
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <Card className="gap-1 py-4">
+function Stat({ label, value, href, highlight, testId }: { label: string; value: number; href?: string; highlight?: boolean; testId?: string }) {
+  const body = (
+    <Card className={`gap-1 py-4 ${highlight ? "border-sky-400 bg-sky-50" : ""}`} data-testid={testId}>
       <CardContent className="px-4">
         <p className="text-muted-foreground text-xs">{label}</p>
         <p className="text-2xl font-bold">{value.toLocaleString("id-ID")}</p>
       </CardContent>
     </Card>
   );
+  return href ? <Link href={href}>{body}</Link> : body;
 }
