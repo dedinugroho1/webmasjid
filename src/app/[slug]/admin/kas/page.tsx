@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileDown, Megaphone, Paperclip, Pencil, Sheet } from "lucide-react";
+import { FileDown, History, Megaphone, Paperclip, Pencil, Sheet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,11 @@ export default async function KasPage({ params, searchParams }: Props) {
           <Input type="month" name="bulan" defaultValue={month} className="w-auto" />
           <Button type="submit" variant="outline">
             Tampilkan
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${slug}/admin/riwayat?jenis=kas`}>
+              <History /> Riwayat
+            </Link>
           </Button>
           <Button asChild variant="outline">
             <Link href={`/${slug}/admin/kas/jumat`}>
