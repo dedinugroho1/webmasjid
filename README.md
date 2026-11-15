@@ -24,6 +24,9 @@ Proyek amal jariyah digital: ribuan masjid bisa memiliki website sendiri di satu
 | 📣 **Pengumuman & Galeri** | Pengumuman (sematkan, batas tampil) dan galeri foto kegiatan dengan kompresi otomatis. |
 | 👥 **Pengurus** | Undang bendahara/admin lewat link (WhatsApp), kelola peran, password sementara, lupa & ganti password. |
 | 🌐 **Domain Sendiri** | Setiap masjid bisa memakai domain sendiri, mis. `masjidalikhlas.or.id`. |
+| 📊 **Ekspor Excel** | Buku kas per bulan atau seluruh riwayat ke CSV (format Excel Indonesia). |
+| 🧪 **Mode Demo** | Masjid demo bisa dijelajahi siapa saja lewat tombol *Coba Dashboard Demo*; semua perubahan ditolak sehingga demo tetap rapi. |
+| 📱 **PWA & Pratinjau Tautan** | Bisa dipasang di layar utama HP; link masjid tampil dengan gambar pratinjau saat dibagikan ke WhatsApp. Sitemap & robots.txt otomatis. |
 | 🛡️ **Keamanan** | Isolasi multi-tenant, rate limit login/daftar/reset (berbasis DB), honeypot anti-bot, panel **superadmin** untuk menangguhkan pendaftaran palsu. |
 
 ## 🧱 Tech Stack
@@ -130,7 +133,9 @@ Panduan self-host lain (VPS/Docker, domain sendiri): **[docs/SELF-HOSTING.md](do
 - [x] Koreksi menit & jeda iqomah per waktu sholat
 - [x] Pengumuman & galeri kegiatan
 - [ ] TV Display masjid (sementara dinonaktifkan; kolom `tenants.running_text` tetap disimpan)
-- [ ] Ekspor buku kas ke Excel/CSV
+- [x] Ekspor buku kas ke Excel/CSV
+- [x] Mode demo hanya-baca
+- [x] PWA & pratinjau tautan WhatsApp
 - [ ] Notifikasi WhatsApp untuk pengumuman
 
 ## 🤝 Kontribusi
