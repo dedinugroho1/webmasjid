@@ -80,7 +80,7 @@ webmasjid/
         ├── domains.ts           # Validasi & deteksi domain sendiri
         ├── prayer.ts            # Perhitungan jadwal sholat
         ├── finance.ts           # Saldo & laporan kas
-        ├── storage.ts           # Upload gambar (Vercel Blob / data URL)
+        ├── storage.ts           # Upload gambar (Bunny Storage / data URL)
         └── pdf/cash-report.tsx  # Template PDF laporan kas
 ```
 

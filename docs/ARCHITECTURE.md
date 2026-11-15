@@ -88,8 +88,12 @@ Nominal disimpan sebagai `bigint` Rupiah utuh (tanpa desimal) untuk menghindari 
 
 ## Penyimpanan file
 
-`src/lib/storage.ts`: Vercel Blob bila `BLOB_READ_WRITE_TOKEN` diset; jika tidak, gambar ≤ 300 KB
-disimpan sebagai data URL di kolom teks (praktis untuk self-host tanpa object storage).
+`src/lib/storage.ts`: Bunny Storage bila `BUNNY_STORAGE_ZONE`, `BUNNY_STORAGE_PASSWORD` dan `BUNNY_CDN_URL`
+diset — gambar diunggah lewat HTTP `PUT` ke API storage (`{region}.storage.bunnycdn.com`), nama file acak
+(`{tenantId}/{jenis}/{uuid}.{ext}`), URL publik lewat Pull Zone. File lama dihapus (`deleteImage`) setelah
+database berhasil diperbarui, dan hanya untuk URL milik CDN kita. Tanpa Bunny, gambar ≤ 300 KB disimpan
+sebagai data URL di kolom teks (praktis untuk self-host tanpa object storage). Tes E2E memakai server
+Bunny tiruan (`tests/e2e/mock-bunny.mjs`).
 
 ## Laporan PDF
 

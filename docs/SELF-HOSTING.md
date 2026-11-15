@@ -33,7 +33,7 @@ Isi `.env`:
 | `BETTER_AUTH_SECRET` | string acak ≥ 32 karakter |
 | `BETTER_AUTH_URL` / `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` (lokal) atau `https://masjidku.or.id` |
 | `NEXT_PUBLIC_ALLOW_REGISTRATION` | `false` setelah masjid Anda terdaftar (menutup pendaftaran) |
-| `BLOB_READ_WRITE_TOKEN` | opsional — token Vercel Blob untuk upload gambar > 300 KB |
+| `BUNNY_STORAGE_ZONE`, `BUNNY_STORAGE_PASSWORD`, `BUNNY_STORAGE_REGION`, `BUNNY_CDN_URL` | opsional — penyimpanan gambar di Bunny (maks 4 MB); tanpa ini gambar ≤ 300 KB disimpan di database. Lihat [DEPLOY-VERCEL.md](DEPLOY-VERCEL.md#penyimpanan-foto-bunny-storage) |
 
 ## 3. Buat tabel
 
