@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { galleryItems } from "@/db/schema";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 import { uploadImage } from "@/lib/storage";
 
@@ -16,7 +17,9 @@ const schema = z.object({
 });
 
 export async function addGalleryItem(slug: string, _prev: GalleryState, formData: FormData): Promise<GalleryState> {
-  const { tenant, user } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = schema.safeParse({
     caption: formData.get("caption") || undefined,
     takenAt: formData.get("takenAt") || undefined,
@@ -43,7 +46,9 @@ export async function addGalleryItem(slug: string, _prev: GalleryState, formData
 }
 
 export async function deleteGalleryItem(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db.delete(galleryItems).where(and(eq(galleryItems.id, id), eq(galleryItems.tenantId, tenant.id)));
   revalidatePath(`/${slug}`, "layout");
 }
