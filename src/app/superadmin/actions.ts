@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { tenants } from "@/db/schema";
 import { isValidSlug } from "@/lib/reserved-slugs";
+import { setPlatformSetting } from "@/lib/platform-settings";
 import { requireSuperadmin } from "@/lib/session";
 
 export type SlugState = { ok?: boolean; error?: string } | null;
@@ -20,6 +21,32 @@ export async function setPublished(tenantId: string, published: boolean) {
   await requireSuperadmin();
   const [t] = await db.update(tenants).set({ isPublished: published }).where(eq(tenants.id, tenantId)).returning({ slug: tenants.slug });
   refresh(t ? [t.slug] : []);
+}
+
+export async function approveTenant(tenantId: string) {
+  await requireSuperadmin();
+  const [t] = await db
+    .update(tenants)
+    .set({ approvedAt: new Date() })
+    .where(eq(tenants.id, tenantId))
+    .returning({ slug: tenants.slug });
+  refresh(t ? [t.slug] : []);
+}
+
+/** Buka/tutup pendaftaran masjid baru (menggantikan NEXT_PUBLIC_ALLOW_REGISTRATION). */
+export async function setRegistrationOpen(open: boolean) {
+  await requireSuperadmin();
+  await setPlatformSetting("registration_open", open);
+  revalidatePath("/superadmin");
+  revalidatePath("/daftar");
+}
+
+/** Aktif: masjid baru menunggu persetujuan sebelum tampil di direktori. */
+export async function setModerationEnabled(enabled: boolean) {
+  await requireSuperadmin();
+  await setPlatformSetting("moderation_enabled", enabled);
+  revalidatePath("/superadmin");
+  revalidatePath("/daftar");
 }
 
 export async function suspendTenant(tenantId: string, reason: string) {
