@@ -291,7 +291,56 @@ test("12. batas percobaan API aktif", async ({ request }) => {
   expect(codes, codes.join(",")).toContain(429);
 });
 
-test("13. tampilan HP tidak melebar", async ({ browser }) => {
+test("13. ekspor buku kas ke Excel (CSV)", async () => {
+  await page.goto("/masuk");
+  await page.fill("#email", ADMIN.email);
+  await page.fill("#password", NEW_PASSWORD);
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await page.waitForURL(/\/(superadmin|admin)/);
+  const csv = await page.request.get(`/${SLUG}/admin/kas/ekspor?bulan=semua`);
+  expect(csv.status()).toBe(200);
+  expect(csv.headers()["content-type"]).toContain("text/csv");
+  const text = await csv.text();
+  expect(text).toContain("Tanggal;Jenis;Kas;Kategori;Keterangan;Pemasukan;Pengeluaran");
+  expect(text).toContain("Kotak Jumat uji");
+});
+
+test("14. mode demo: bisa dijelajahi, perubahan ditolak", async ({ browser }) => {
+  const dctx = await browser.newContext();
+  const d = await dctx.newPage();
+  await d.goto("/");
+  await d.getByRole("link", { name: "Coba Dashboard Demo" }).click();
+  await d.getByRole("button", { name: "Masuk", exact: true }).click();
+  await d.waitForURL("**/al-ikhlas/admin");
+  await expect(d.getByText("Mode demo", { exact: true })).toBeVisible();
+
+  await d.goto("/al-ikhlas/admin/akun");
+  await d.fill("#currentPassword", "demo12345");
+  await d.fill("#newPassword", "dibajak-123");
+  await d.fill("#confirmPassword", "dibajak-123");
+  await d.getByRole("button", { name: "Ganti Password" }).click();
+  await expect(d.getByText(/Mode demo: perubahan tidak disimpan/)).toBeVisible();
+  const api = await d.request.post("/api/auth/change-password", {
+    headers: { origin: new URL(d.url()).origin },
+    data: { currentPassword: "demo12345", newPassword: "dibajak-456" },
+  });
+  expect(api.status()).toBe(403);
+  await dctx.close();
+});
+
+test("15. pratinjau tautan, robots, sitemap & PWA", async ({ request }) => {
+  await page.goto("/al-ikhlas");
+  const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+  expect(og).toContain("/al-ikhlas/opengraph-image");
+  const img = await request.get(new URL(og!).pathname);
+  expect(img.headers()["content-type"]).toBe("image/png");
+  expect(await (await request.get("/robots.txt")).text()).toContain("Disallow: /*/admin");
+  expect(await (await request.get("/sitemap.xml")).text()).toContain("/al-ikhlas</loc>");
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest.name).toBe("WebMasjid");
+});
+
+test("16. tampilan HP tidak melebar", async ({ browser }) => {
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const mp = await m.newPage();
   for (const path of ["/", "/al-ikhlas", "/masuk", "/daftar"]) {
