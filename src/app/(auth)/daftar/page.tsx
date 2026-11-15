@@ -3,13 +3,15 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RegisterForm } from "@/components/auth/register-form";
 import { createFormToken } from "@/lib/spam";
-import { appUrl, registrationOpen } from "@/lib/utils";
+import { getPlatformSettings } from "@/lib/platform-settings";
+import { appUrl } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Daftarkan Masjid" };
 // Dirender per permintaan agar token waktu form selalu baru.
 export const dynamic = "force-dynamic";
 
-export default function DaftarPage() {
+export default async function DaftarPage() {
+  const settings = await getPlatformSettings();
   return (
     <Card className="w-full max-w-xl">
       <CardHeader>
@@ -19,7 +21,13 @@ export default function DaftarPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {registrationOpen() ? (
+        {settings.registrationOpen && settings.moderationEnabled && (
+          <p className="bg-muted/60 rounded-md border p-3 text-sm" data-testid="moderation-note">
+            Masjid baru diperiksa dulu oleh pengelola sebelum tampil di direktori publik. Dashboard Anda tetap bisa langsung
+            dipakai.
+          </p>
+        )}
+        {settings.registrationOpen ? (
           <RegisterForm baseUrl={appUrl()} formToken={createFormToken()} />
         ) : (
           <p className="text-muted-foreground text-sm">Pendaftaran masjid baru sedang ditutup di instance ini.</p>

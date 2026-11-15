@@ -13,7 +13,7 @@ import { DEFAULT_RUNNING_TEXT } from "@/lib/constants";
 import { checkLimits, clientIp, LIMITS } from "@/lib/rate-limit";
 import { isValidSlug } from "@/lib/reserved-slugs";
 import { isDisposableEmail, looksLikeSpamText, verifyFormToken } from "@/lib/spam";
-import { registrationOpen } from "@/lib/utils";
+import { getPlatformSettings } from "@/lib/platform-settings";
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
 
@@ -82,7 +82,8 @@ const registerSchema = z.object({
 });
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  if (!registrationOpen()) return { error: "Pendaftaran masjid baru sedang ditutup." };
+  const settings = await getPlatformSettings();
+  if (!settings.registrationOpen) return { error: "Pendaftaran masjid baru sedang ditutup." };
   // Honeypot: kolom tersembunyi yang hanya diisi bot.
   if (formData.get("website")) return { error: "Pendaftaran gagal. Silakan coba lagi." };
 
@@ -132,6 +133,8 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
         timezone: city.timezone,
         email: data.email,
         runningText: DEFAULT_RUNNING_TEXT,
+        // Dengan moderasi aktif, masjid baru menunggu persetujuan superadmin.
+        approvedAt: settings.moderationEnabled ? null : new Date(),
       })
       .returning({ id: tenants.id });
     tenantId = t.id;
