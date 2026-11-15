@@ -30,7 +30,6 @@
     "@neondatabase/serverless": "^1.2.1",
     "@radix-ui/react-slot": "^1.5.0",
     "@react-pdf/renderer": "^4.9.0",
-    "@vercel/blob": "^2.9.0",
     "@vercel/functions": "^3.11.3",
     "adhan": "^4.4.6",
     "better-auth": "^1.7.23",
