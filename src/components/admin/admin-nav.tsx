@@ -7,6 +7,7 @@ import {
   BookOpenText,
   CalendarDays,
   ExternalLink,
+  History,
   Images,
   LayoutDashboard,
   LogOut,
@@ -27,6 +28,7 @@ export function AdminNav({ slug, canManage }: { slug: string; canManage: boolean
   const items = [
     { href: base, label: "Ringkasan", icon: LayoutDashboard },
     { href: `${base}/kas`, label: "Buku Kas", icon: BookOpenText },
+    { href: `${base}/riwayat`, label: "Riwayat Perubahan", icon: History },
     ...(canManage
       ? [
           { href: `${base}/jumat`, label: "Petugas Jumat", icon: Mic },
