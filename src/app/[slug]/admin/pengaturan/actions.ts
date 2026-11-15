@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
@@ -9,6 +10,7 @@ import { TIMEZONES } from "@/lib/constants";
 import { validateCustomDomain } from "@/lib/domains";
 import { CALCULATION_METHODS } from "@/lib/prayer";
 import { parseBankAccounts, parsePrayerTuning } from "@/lib/settings-parse";
+import { deleteTenantCompletely } from "@/lib/tenant-delete";
 import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 import { deleteImage, uploadImage } from "@/lib/storage";
@@ -130,4 +132,23 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
 
   revalidatePath(`/${slug}`, "layout");
   return { ok: true };
+}
+
+export type DeleteMasjidState = { error?: string } | null;
+
+/** Hapus masjid & seluruh datanya. Admin harus mengetik alamat masjid (slug) sebagai konfirmasi. */
+export async function deleteMasjid(slug: string, _prev: DeleteMasjidState, formData: FormData): Promise<DeleteMasjidState> {
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
+  if (tenant.isDemo) return { error: "Masjid demo tidak dapat dihapus." };
+
+  if (String(formData.get("confirm") ?? "").trim() !== tenant.slug) {
+    return { error: `Ketik persis "${tenant.slug}" untuk mengonfirmasi penghapusan.` };
+  }
+
+  const result = await deleteTenantCompletely(tenant.id);
+  if (!result.storageCleaned) console.error(`[hapus-masjid] Foto ${tenant.id} di penyimpanan belum terhapus`);
+  revalidatePath("/", "layout");
+  redirect("/masuk?dihapus=1");
 }
