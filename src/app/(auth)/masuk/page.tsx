@@ -7,8 +7,8 @@ import { getDemoTenant } from "@/lib/tenant";
 
 export const metadata: Metadata = { title: "Masuk Pengurus" };
 
-export default async function MasukPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; reset?: string; demo?: string }> }) {
-  const { next, error, reset, demo } = await searchParams;
+export default async function MasukPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; reset?: string; demo?: string; dihapus?: string }> }) {
+  const { next, error, reset, demo, dihapus } = await searchParams;
   const demoTenant = demo ? await getDemoTenant().catch(() => null) : null;
   return (
     <Card className="w-full max-w-sm">
@@ -25,6 +25,11 @@ export default async function MasukPage({ searchParams }: { searchParams: Promis
         {error === "suspended" && (
           <p className="rounded-md bg-amber-100 p-3 text-sm text-amber-900">
             Website masjid ini sedang ditangguhkan oleh pengelola platform. Hubungi admin WebMasjid untuk informasi lebih lanjut.
+          </p>
+        )}
+        {dihapus && (
+          <p className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-900">
+            Masjid beserta seluruh datanya telah dihapus permanen. Jazakumullahu khairan telah memakai WebMasjid.
           </p>
         )}
         {reset && (
