@@ -6,6 +6,7 @@ import { and, eq, not } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { kajianFrequencyEnum, routineKajian } from "@/db/schema";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 
 export type KajianState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
@@ -32,7 +33,9 @@ function parse(formData: FormData) {
 }
 
 export async function createKajian(slug: string, _prev: KajianState, formData: FormData): Promise<KajianState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parse(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   await db.insert(routineKajian).values({ ...parsed.data, tenantId: tenant.id });
@@ -41,7 +44,9 @@ export async function createKajian(slug: string, _prev: KajianState, formData: F
 }
 
 export async function updateKajian(slug: string, id: string, _prev: KajianState, formData: FormData): Promise<KajianState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parse(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const updated = await db
@@ -55,7 +60,9 @@ export async function updateKajian(slug: string, id: string, _prev: KajianState,
 }
 
 export async function toggleKajian(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db
     .update(routineKajian)
     .set({ isActive: not(routineKajian.isActive) })
@@ -64,7 +71,9 @@ export async function toggleKajian(slug: string, id: string) {
 }
 
 export async function deleteKajian(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db.delete(routineKajian).where(and(eq(routineKajian.id, id), eq(routineKajian.tenantId, tenant.id)));
   revalidatePath(`/${slug}`, "layout");
 }
