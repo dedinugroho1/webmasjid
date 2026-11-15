@@ -79,8 +79,11 @@ export default async function LandingPage() {
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild size="lg" variant="outline">
                 <Link href="/al-ikhlas">
-                  Jelajahi Demo <ArrowRight />
+                  Lihat Website Demo <ArrowRight />
                 </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/masuk?demo=1">Coba Dashboard Demo</Link>
               </Button>
               <Button asChild size="lg">
                 <Link href="/daftar">
