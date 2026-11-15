@@ -27,8 +27,10 @@ Proyek amal jariyah digital: ribuan masjid bisa memiliki website sendiri di satu
 | 📊 **Ekspor Excel** | Buku kas per bulan atau seluruh riwayat ke CSV (format Excel Indonesia). |
 | 🧪 **Mode Demo** | Masjid demo bisa dijelajahi siapa saja lewat tombol *Coba Dashboard Demo*; semua perubahan ditolak sehingga demo tetap rapi. |
 | 📱 **PWA & Pratinjau Tautan** | Bisa dipasang di layar utama HP; link masjid tampil dengan gambar pratinjau saat dibagikan ke WhatsApp. Sitemap & robots.txt otomatis. |
+| 🔎 **Riwayat Perubahan** | Setiap tambah/ubah/hapus transaksi kas dan pengelolaan pengurus tercatat: siapa, kapan, dan nilai lama → baru. Tidak bisa diubah dari aplikasi. |
+| 🧑‍⚖️ **Panel Superadmin** | Statistik, antrean **moderasi masjid baru**, tombol buka/tutup pendaftaran, kontak admin tiap masjid, cari/urut/halaman, ekspor CSV, dan manajemen akun (reset password, ubah peran, hapus). |
 | 🗑️ **Privasi & Hak Data** | Kebijakan Privasi & Syarat Ketentuan, persetujuan saat daftar, dan **Hapus Masjid** (seluruh data, akun, dan foto) oleh Admin DKM. |
-| 🛡️ **Keamanan** | Isolasi multi-tenant, rate limit login/daftar/reset (berbasis DB), honeypot anti-bot, panel **superadmin** untuk menangguhkan pendaftaran palsu. |
+| 🛡️ **Keamanan** | Isolasi multi-tenant, rate limit login/daftar/reset (berbasis DB), honeypot & pemeriksaan anti-spam, penangguhan masjid palsu, mode demo hanya-baca. |
 
 ## 🧱 Tech Stack
 
