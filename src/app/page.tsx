@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader } from "@/components/landing/site-header";
 import { listPublishedTenants } from "@/lib/tenant";
+import { platformConfig } from "@/lib/platform";
 import { githubUrl } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -56,12 +57,11 @@ async function getDirectory() {
 
 export default async function LandingPage() {
   const masjids = await getDirectory();
-  const wa = process.env.NEXT_PUBLIC_SERVICE_WHATSAPP;
-  const qris = process.env.NEXT_PUBLIC_PLATFORM_QRIS_URL;
+  const platform = platformConfig();
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader showServices={Boolean(platform.serviceHref)} showDonation={Boolean(platform.qrisUrl)} />
       <main>
         {/* Hero */}
         <section className="bg-pattern relative overflow-hidden border-b">
@@ -207,55 +207,49 @@ npm run dev   # → http://localhost:3000`}</code>
         </section>
 
         {/* Jasa Terima Beres */}
-        <section id="jasa" className="bg-primary text-primary-foreground scroll-mt-16">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 md:grid-cols-[1fr_auto]">
-            <div className="grid gap-3">
-              <p className="flex items-center gap-2 text-sm font-semibold opacity-80">
-                <Wrench className="size-4" /> Jasa Pasang “Terima Beres”
-              </p>
-              <h2 className="text-3xl font-bold">Pengurus DKM tidak paham teknis? Kami bantu.</h2>
-              <p className="max-w-2xl opacity-90">
-                Instalasi server mandiri, pemasangan domain sendiri (mis. masjidalikhlas.or.id), migrasi data kas lama,
-                hingga pelatihan pengurus. Biaya terjangkau, hasilnya untuk kemaslahatan jamaah.
-              </p>
+        {platform.serviceHref && (
+          <section id="jasa" className="bg-primary text-primary-foreground scroll-mt-16">
+            <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 md:grid-cols-[1fr_auto]">
+              <div className="grid gap-3">
+                <p className="flex items-center gap-2 text-sm font-semibold opacity-80">
+                  <Wrench className="size-4" /> Jasa Pasang “Terima Beres”
+                </p>
+                <h2 className="text-3xl font-bold">Pengurus DKM tidak paham teknis? Kami bantu.</h2>
+                <p className="max-w-2xl opacity-90">
+                  Instalasi server mandiri, pemasangan domain sendiri (mis. masjidalikhlas.or.id), migrasi data kas lama,
+                  hingga pelatihan pengurus. Biaya terjangkau, hasilnya untuk kemaslahatan jamaah.
+                </p>
+              </div>
+              <Button asChild size="lg" variant="secondary">
+                <a href={platform.serviceHref} target="_blank" rel="noreferrer">
+                  Konsultasi Gratis <ArrowRight />
+                </a>
+              </Button>
             </div>
-            <Button asChild size="lg" variant="secondary">
-              <a
-                href={wa ? `https://wa.me/${wa}?text=${encodeURIComponent("Assalamu'alaikum, saya ingin konsultasi jasa pasang WebMasjid.")}` : "mailto:halo@webmasjid.com"}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Konsultasi Gratis <ArrowRight />
-              </a>
-            </Button>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Donasi */}
-        <section id="donasi" className="mx-auto max-w-4xl scroll-mt-16 px-4 py-20">
-          <Card className="md:flex-row md:items-center">
-            <CardHeader className="flex-1">
-              <div className="bg-primary/10 text-primary mb-2 grid size-11 place-items-center rounded-lg">
-                <HandHeart className="size-6" />
-              </div>
-              <CardTitle className="text-2xl">Dukung WebMasjid tetap gratis</CardTitle>
-              <CardDescription className="text-base">
-                {process.env.NEXT_PUBLIC_PLATFORM_DONATION_NOTE ?? "Infaq untuk biaya server & pemeliharaan WebMasjid"}.
-                Seluruh dana dipakai untuk sewa server, database, domain, dan pengembangan fitur — dilaporkan terbuka.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              {qris ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={qris} alt="QRIS donasi WebMasjid" className="size-48 rounded-lg border bg-white object-contain p-2" />
-              ) : (
-                <div className="text-muted-foreground grid size-48 place-items-center rounded-lg border border-dashed p-4 text-center text-xs">
-                  QRIS donasi platform akan ditampilkan di sini (atur NEXT_PUBLIC_PLATFORM_QRIS_URL)
+        {platform.qrisUrl && (
+          <section id="donasi" className="mx-auto max-w-4xl scroll-mt-16 px-4 py-20">
+            <Card className="md:flex-row md:items-center">
+              <CardHeader className="flex-1">
+                <div className="bg-primary/10 text-primary mb-2 grid size-11 place-items-center rounded-lg">
+                  <HandHeart className="size-6" />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+                <CardTitle className="text-2xl">Dukung WebMasjid tetap gratis</CardTitle>
+                <CardDescription className="text-base">
+                  {platform.donationNote}.
+                  Seluruh dana dipakai untuk sewa server, database, domain, dan pengembangan fitur — dilaporkan terbuka.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={platform.qrisUrl} alt="QRIS donasi WebMasjid" className="size-48 rounded-lg border bg-white object-contain p-2" />
+              </CardContent>
+            </Card>
+          </section>
+        )}
       </main>
 
       <footer className="text-muted-foreground border-t py-8 text-center text-sm">
