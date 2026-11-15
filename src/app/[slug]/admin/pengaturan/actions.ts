@@ -11,7 +11,7 @@ import { CALCULATION_METHODS } from "@/lib/prayer";
 import { parseBankAccounts, parsePrayerTuning } from "@/lib/settings-parse";
 import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
-import { uploadImage } from "@/lib/storage";
+import { deleteImage, uploadImage } from "@/lib/storage";
 
 export type SettingsFormState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
 
@@ -70,44 +70,63 @@ export async function updateSettings(slug: string, _prev: SettingsFormState, for
     return { error: (e as Error).message };
   }
 
+  // Foto yang baru diunggah (bukan penghapusan): dibersihkan bila penyimpanan gagal.
+  const newUploads = Object.values(images).filter((u): u is string => Boolean(u));
+
   if (domain.domain) {
     const [taken] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.customDomain, domain.domain)).limit(1);
-    if (taken && taken.id !== tenant.id) return { fieldErrors: { customDomain: ["Domain ini sudah dipakai masjid lain."] } };
+    if (taken && taken.id !== tenant.id) {
+      await Promise.all(newUploads.map(deleteImage));
+      return { fieldErrors: { customDomain: ["Domain ini sudah dipakai masjid lain."] } };
+    }
   }
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(tenants)
-      .set({
-        name: d.name,
-        description: d.description,
-        address: d.address,
-        phone: d.phone,
-        email: d.email,
-        city: d.city,
-        latitude: d.latitude,
-        longitude: d.longitude,
-        timezone: d.timezone,
-        bankAccounts: parseBankAccounts(d.bankAccounts),
-        isPublished: d.isPublished === "on",
-        customDomain: domain.domain,
-        ...images,
-      })
-      .where(eq(tenants.id, tenant.id));
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(tenants)
+        .set({
+          name: d.name,
+          description: d.description,
+          address: d.address,
+          phone: d.phone,
+          email: d.email,
+          city: d.city,
+          latitude: d.latitude,
+          longitude: d.longitude,
+          timezone: d.timezone,
+          bankAccounts: parseBankAccounts(d.bankAccounts),
+          isPublished: d.isPublished === "on",
+          customDomain: domain.domain,
+          ...images,
+        })
+        .where(eq(tenants.id, tenant.id));
 
-    await tx
-      .insert(prayerSettings)
-      .values({
-        tenantId: tenant.id,
-        calculationMethod: d.calculationMethod,
-        adjustments: tuning.adjustments,
-        iqomahMinutes: tuning.iqomahMinutes,
-      })
-      .onConflictDoUpdate({
-        target: prayerSettings.tenantId,
-        set: { calculationMethod: d.calculationMethod, adjustments: tuning.adjustments, iqomahMinutes: tuning.iqomahMinutes },
-      });
-  });
+      await tx
+        .insert(prayerSettings)
+        .values({
+          tenantId: tenant.id,
+          calculationMethod: d.calculationMethod,
+          adjustments: tuning.adjustments,
+          iqomahMinutes: tuning.iqomahMinutes,
+        })
+        .onConflictDoUpdate({
+          target: prayerSettings.tenantId,
+          set: { calculationMethod: d.calculationMethod, adjustments: tuning.adjustments, iqomahMinutes: tuning.iqomahMinutes },
+        });
+    });
+  } catch (e) {
+    await Promise.all(newUploads.map(deleteImage));
+    throw e;
+  }
+
+  // Foto lama yang diganti atau dihapus dibersihkan dari penyimpanan.
+  const previous = { logoUrl: tenant.logoUrl, qrisUrl: tenant.qrisUrl, coverUrl: tenant.coverUrl };
+  await Promise.all(
+    (Object.keys(images) as (keyof typeof images)[])
+      .filter((key) => previous[key] && previous[key] !== images[key])
+      .map((key) => deleteImage(previous[key])),
+  );
 
   revalidatePath(`/${slug}`, "layout");
   return { ok: true };
