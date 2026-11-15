@@ -38,6 +38,15 @@ export default async function AdminLayout({
           <AdminNav slug={tenant.slug} canManage={canManage} />
         </aside>
         <main className="min-w-0">
+          {!tenant.approvedAt && !tenant.isDemo && (
+            <div
+              className="mb-4 rounded-lg border border-sky-300 bg-sky-50 p-3 text-sm text-sky-950 print:hidden"
+              data-testid="pending-banner"
+            >
+              <b>Menunggu persetujuan pengelola.</b> Dashboard dan website masjid Anda sudah bisa dipakai lewat tautannya,
+              tetapi belum tampil di direktori WebMasjid dan belum diindeks mesin pencari sampai disetujui.
+            </div>
+          )}
           {isReadOnlyDemo(access) && (
             <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 print:hidden">
               <b>Mode demo</b> — silakan jelajahi semua menu, tetapi perubahan tidak disimpan.{" "}
