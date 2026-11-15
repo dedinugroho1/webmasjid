@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { localInputToDate } from "@/lib/format";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 
 export type EventFormState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
@@ -22,7 +23,9 @@ const eventSchema = z.object({
 });
 
 export async function createEvent(slug: string, _prev: EventFormState, formData: FormData): Promise<EventFormState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const raw = Object.fromEntries([...formData.entries()].filter(([, v]) => v !== ""));
   const parsed = eventSchema.safeParse(raw);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
@@ -38,7 +41,9 @@ export async function createEvent(slug: string, _prev: EventFormState, formData:
 }
 
 export async function updateEvent(slug: string, id: string, _prev: EventFormState, formData: FormData): Promise<EventFormState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const raw = Object.fromEntries([...formData.entries()].filter(([, v]) => v !== ""));
   const parsed = eventSchema.safeParse(raw);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
@@ -64,7 +69,9 @@ export async function updateEvent(slug: string, id: string, _prev: EventFormStat
 }
 
 export async function deleteEvent(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db.delete(events).where(and(eq(events.id, id), eq(events.tenantId, tenant.id)));
   revalidatePath(`/${slug}`, "layout");
 }
