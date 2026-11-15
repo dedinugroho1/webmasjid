@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from "@playwright/test";
+import { clearRateLimits } from "./db";
 
 export const DEMO = { slug: "al-ikhlas", email: "admin@webmasjid.test", password: "demo12345" };
 
@@ -18,6 +19,9 @@ function rand() {
 export { expect };
 
 export async function login(page: Page, email = DEMO.email, password = DEMO.password) {
+  // Banyak tes memakai akun demo; batas login per email (8 / 15 menit) adalah
+  // perilaku yang benar, jadi penghitungnya dikosongkan khusus untuk tes.
+  await clearRateLimits(`act:signin:email:${email.toLowerCase()}`);
   await page.goto("/masuk");
   await page.fill("#email", email);
   await page.fill("#password", password);
