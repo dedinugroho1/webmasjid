@@ -68,6 +68,7 @@ test("2. daftar masjid baru (Better Auth + tenant)", async () => {
   await page.fill("#password", ADMIN.password);
   // Form pendaftaran menolak kiriman < 3 detik (anti-bot).
   await page.waitForTimeout(Math.max(0, 3500 - (Date.now() - openedAt)));
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await page.waitForURL(`**/${SLUG}/admin?welcome=1`);
   await expect(page.getByText(/Ahlan wa sahlan/)).toBeVisible();
@@ -232,6 +233,7 @@ test("9. undang bendahara: akses terbatas, lalu dikeluarkan", async ({ browser }
   await b.fill("#name", BENDAHARA.name);
   await b.fill("#email", BENDAHARA.email);
   await b.fill("#password", BENDAHARA.password);
+  await b.check("input[name=consent]");
   await b.getByRole("button", { name: /Buat Akun/ }).click();
   await b.waitForURL(`**/${SLUG}/admin`);
   await expect(b.getByRole("link", { name: "Pengurus" })).toHaveCount(0);
