@@ -181,6 +181,14 @@ export default async function MasjidPage({ params }: Props) {
           WebMasjid
         </a>{" "}
         — platform open-source amal jariyah digital.
+        <span className="mt-1 flex justify-center gap-3">
+          <a href={`${appUrl()}/privasi`} className="hover:underline">
+            Kebijakan Privasi
+          </a>
+          <a href={`${appUrl()}/syarat`} className="hover:underline">
+            Syarat & Ketentuan
+          </a>
+        </span>
       </footer>
     </div>
   );
