@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { and, asc, desc, eq, gt, gte, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import {
   announcements,
@@ -118,7 +118,7 @@ export async function listPublishedTenants(limit = 48) {
       logoUrl: tenants.logoUrl,
     })
     .from(tenants)
-    .where(and(eq(tenants.isPublished, true), isNull(tenants.suspendedAt)))
+    .where(and(eq(tenants.isPublished, true), isNull(tenants.suspendedAt), isNotNull(tenants.approvedAt)))
     .orderBy(desc(tenants.createdAt))
     .limit(limit);
 }
