@@ -1,21 +1,5 @@
-import type { Page } from "@playwright/test";
+import { MOCK, PNG, tenantFiles, tenantIdOf } from "./bunny-helpers";
 import { expect, registerMasjid, test } from "./helpers";
-
-const MOCK = `http://localhost:${process.env.MOCK_BUNNY_PORT ?? 4010}`;
-const PNG = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==",
-  "base64",
-);
-
-async function tenantFiles(page: Page, tenantId: string) {
-  const all: string[] = await (await page.request.get(`${MOCK}/__files`)).json();
-  return all.filter((f) => f.startsWith(`${tenantId}/`));
-}
-
-async function tenantIdOf(page: Page) {
-  const session = await (await page.request.get("/api/auth/get-session")).json();
-  return session.session.tenantId as string;
-}
 
 test("foto galeri: tersimpan di Bunny, tampil lewat CDN, terhapus bersama itemnya", async ({ page }) => {
   const { slug } = await registerMasjid(page);
