@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 
 export type PasswordState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
@@ -18,7 +19,8 @@ const changePasswordSchema = z
   .refine((d) => d.newPassword === d.confirmPassword, { path: ["confirmPassword"], message: "Konfirmasi tidak sama" });
 
 export async function changeOwnPassword(slug: string, _prev: PasswordState, formData: FormData): Promise<PasswordState> {
-  await requireTenantAccess(slug);
+  const access = await requireTenantAccess(slug);
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = changePasswordSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   try {
