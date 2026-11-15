@@ -57,6 +57,13 @@
       "when": 1794637277847,
       "tag": "0007_jumat_kajian_rutin",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794703510652,
+      "tag": "0008_demo_flag",
+      "breakpoints": true
     }
   ]
 }

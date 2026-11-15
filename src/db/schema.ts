@@ -86,6 +86,8 @@ export const tenants = pgTable(
     runningText: text("running_text"),
     /** Tampil di direktori publik webmasjid.com. */
     isPublished: boolean("is_published").notNull().default(true),
+    /** Masjid demo: bisa dijelajahi dengan akun demo, tetapi tidak bisa diubah. */
+    isDemo: boolean("is_demo").notNull().default(false),
     /** Diisi superadmin untuk menangguhkan masjid (mis. pendaftaran palsu). */
     suspendedAt: timestamp("suspended_at", { withTimezone: true }),
     suspendReason: text("suspend_reason"),
