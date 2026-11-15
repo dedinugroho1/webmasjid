@@ -61,6 +61,12 @@ export async function checkTenantAccess(slug: string, roles?: UserRole[]) {
   return evaluate(session, tenant, roles).ok ? { tenant, user: session.user } : null;
 }
 
+/** Versi non-redirect untuk route handler superadmin. */
+export async function checkSuperadmin() {
+  const session = await getSession();
+  return session?.user.role === "SUPERADMIN" ? session.user : null;
+}
+
 /** Guard panel superadmin platform. */
 export async function requireSuperadmin() {
   const session = await getSession();
