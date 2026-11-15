@@ -2,7 +2,7 @@
  * Server Bunny Storage tiruan untuk tes E2E (tanpa kredensial/jaringan).
  *
  *   PUT    /{zone}/{path}   simpan file (header AccessKey wajib cocok)
- *   DELETE /{zone}/{path}   hapus file
+ *   DELETE /{zone}/{path}   hapus file (path berakhiran "/" = hapus folder rekursif)
  *   GET    /cdn/{path}      "Pull Zone": sajikan file
  *   GET    /__files         daftar path yang tersimpan (untuk asersi tes)
  */
@@ -43,6 +43,14 @@ createServer(async (req, res) => {
       for await (const c of req) chunks.push(c);
       files.set(key, Buffer.concat(chunks));
       return json(res, 201, { HttpCode: 201, Message: "File uploaded." });
+    }
+    if (key.endsWith("/")) {
+      // Seperti Bunny sungguhan: DELETE pada path berakhiran "/" menghapus folder beserta isinya.
+      const doomed = [...files.keys()].filter((k) => k.startsWith(key));
+      doomed.forEach((k) => files.delete(k));
+      return doomed.length
+        ? json(res, 200, { HttpCode: 200, Message: "Directory deleted successfully." })
+        : json(res, 404, { HttpCode: 404, Message: "Object Not Found" });
     }
     if (!files.delete(key)) return json(res, 404, { HttpCode: 404, Message: "Object Not Found" });
     return json(res, 200, { HttpCode: 200, Message: "File deleted successfully." });
