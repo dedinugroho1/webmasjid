@@ -98,6 +98,16 @@ export async function getActiveKajian(tenantId: string) {
     .orderBy(asc(routineKajian.dayOfWeek), asc(routineKajian.createdAt));
 }
 
+/** Masjid demo (bila ada) untuk tombol "Coba Dashboard Demo". */
+export const getDemoTenant = cache(async () => {
+  const [row] = await db
+    .select({ slug: tenants.slug, name: tenants.name })
+    .from(tenants)
+    .where(and(eq(tenants.isDemo, true), isNull(tenants.suspendedAt)))
+    .limit(1);
+  return row ?? null;
+});
+
 export async function listPublishedTenants(limit = 48) {
   return db
     .select({
