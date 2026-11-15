@@ -110,6 +110,11 @@ export default function PrivasiPage() {
           pengurus, catatan kas, agenda, pengumuman, dan foto di penyimpanan ikut terhapus permanen dan tidak dapat
           dipulihkan. Sebelum menghapus, unduh dulu laporan kas (PDF/Excel) bila masih dibutuhkan.
         </p>
+        <p>
+          Foto dikirim melalui jaringan CDN, sehingga salinan sementara (<i>cache</i>) sebuah foto yang sudah dihapus
+          dapat masih terbuka lewat alamat langsungnya sampai masa cache CDN berakhir. Foto tersebut tidak lagi tampil di
+          website mana pun.
+        </p>
       </Clause>
 
       <Clause n={7} title="Hak Anda">
