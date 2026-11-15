@@ -49,3 +49,13 @@ test("password akun demo tidak bisa diganti (form & API)", async ({ page }) => {
   await page.waitForURL("**/masuk");
   await login(page);
 });
+
+test("tombol 'Coba Dashboard Demo' mengisi akun demo otomatis", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Coba Dashboard Demo" }).click();
+  await page.waitForURL(/\/masuk\?demo=1/);
+  await expect(page.locator("#email")).toHaveValue(DEMO.email);
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await page.waitForURL(`**/${DEMO.slug}/admin`);
+  await expect(page.getByText("Mode demo", { exact: true })).toBeVisible();
+});
