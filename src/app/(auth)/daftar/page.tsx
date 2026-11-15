@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RegisterForm } from "@/components/auth/register-form";
+import { createFormToken } from "@/lib/spam";
 import { appUrl, registrationOpen } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Daftarkan Masjid" };
+// Dirender per permintaan agar token waktu form selalu baru.
+export const dynamic = "force-dynamic";
 
 export default function DaftarPage() {
   return (
@@ -17,7 +20,7 @@ export default function DaftarPage() {
       </CardHeader>
       <CardContent className="grid gap-4">
         {registrationOpen() ? (
-          <RegisterForm baseUrl={appUrl()} />
+          <RegisterForm baseUrl={appUrl()} formToken={createFormToken()} />
         ) : (
           <p className="text-muted-foreground text-sm">Pendaftaran masjid baru sedang ditutup di instance ini.</p>
         )}

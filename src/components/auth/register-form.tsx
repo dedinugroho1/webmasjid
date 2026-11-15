@@ -11,7 +11,7 @@ import { CITIES } from "@/lib/cities";
 import { slugify } from "@/lib/utils";
 import { Field } from "./field";
 
-export function RegisterForm({ baseUrl }: { baseUrl: string }) {
+export function RegisterForm({ baseUrl, formToken }: { baseUrl: string; formToken: string }) {
   const [state, action, pending] = useActionForm(registerAction, null);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -19,6 +19,8 @@ export function RegisterForm({ baseUrl }: { baseUrl: string }) {
 
   return (
     <form onSubmit={action} className="grid gap-4">
+      {/* Token waktu bertanda tangan: form yang dikirim terlalu cepat ditolak. */}
+      <input type="hidden" name="formToken" value={formToken} />
       {/* Honeypot anti-bot: disembunyikan dari manusia & pembaca layar. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
