@@ -17,8 +17,8 @@ const BUNNY_REGIONS = new Set(["ny", "la", "sg", "syd", "uk", "se", "br", "jh"])
 export type BunnyConfig = {
   zone: string;
   accessKey: string;
-  /** Host API penyimpanan, mis. "sg.storage.bunnycdn.com". */
-  host: string;
+  /** Origin API penyimpanan, mis. "https://sg.storage.bunnycdn.com". */
+  origin: string;
   /** URL publik (Pull Zone) tanpa garis miring di akhir, mis. "https://masjid.b-cdn.net". */
   publicUrl: string;
 };
@@ -30,6 +30,7 @@ export type BunnyConfig = {
  * - `BUNNY_STORAGE_PASSWORD` password Storage Zone (FTP & API Access → Password)
  * - `BUNNY_STORAGE_REGION`   opsional: sg, ny, la, syd, uk, se, br, jh (kosong = DE)
  * - `BUNNY_CDN_URL`          URL Pull Zone yang terhubung ke zone tersebut
+ * - `BUNNY_STORAGE_ENDPOINT` hanya untuk pengujian: origin API pengganti (server tiruan)
  */
 export function bunnyConfig(env: Record<string, string | undefined> = process.env): BunnyConfig | null {
   const zone = env.BUNNY_STORAGE_ZONE?.trim();
@@ -39,12 +40,13 @@ export function bunnyConfig(env: Record<string, string | undefined> = process.en
 
   const region = env.BUNNY_STORAGE_REGION?.trim().toLowerCase();
   const host = region && BUNNY_REGIONS.has(region) ? `${region}.storage.bunnycdn.com` : "storage.bunnycdn.com";
+  const origin = (env.BUNNY_STORAGE_ENDPOINT?.trim() || `https://${host}`).replace(/\/+$/, "");
   const publicUrl = (/^https?:\/\//.test(cdn) ? cdn : `https://${cdn}`).replace(/\/+$/, "");
-  return { zone, accessKey, host, publicUrl };
+  return { zone, accessKey, origin, publicUrl };
 }
 
 function objectUrl(cfg: BunnyConfig, path: string) {
-  return `https://${cfg.host}/${encodeURIComponent(cfg.zone)}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  return `${cfg.origin}/${encodeURIComponent(cfg.zone)}/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 /**

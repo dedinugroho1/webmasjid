@@ -26,11 +26,12 @@ describe("bunnyConfig", () => {
     expect(bunnyConfig(ENV)).toEqual({
       zone: "webmasjid",
       accessKey: "rahasia-zone",
-      host: "sg.storage.bunnycdn.com",
+      origin: "https://sg.storage.bunnycdn.com",
       publicUrl: "https://webmasjid.b-cdn.net",
     });
-    expect(bunnyConfig({ ...ENV, BUNNY_STORAGE_REGION: "" })?.host).toBe("storage.bunnycdn.com");
-    expect(bunnyConfig({ ...ENV, BUNNY_STORAGE_REGION: "tidak-ada" })?.host).toBe("storage.bunnycdn.com");
+    expect(bunnyConfig({ ...ENV, BUNNY_STORAGE_REGION: "" })?.origin).toBe("https://storage.bunnycdn.com");
+    expect(bunnyConfig({ ...ENV, BUNNY_STORAGE_REGION: "tidak-ada" })?.origin).toBe("https://storage.bunnycdn.com");
+    expect(bunnyConfig({ ...ENV, BUNNY_STORAGE_ENDPOINT: "http://localhost:4010/" })?.origin).toBe("http://localhost:4010");
     expect(bunnyConfig({ ...ENV, BUNNY_CDN_URL: "https://cdn.masjid.id" })?.publicUrl).toBe("https://cdn.masjid.id");
   });
 });
