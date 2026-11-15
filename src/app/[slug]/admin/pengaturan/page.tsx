@@ -1,7 +1,8 @@
+import { DeleteMasjidForm } from "@/components/admin/delete-masjid-form";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { requireTenantAccess } from "@/lib/session";
 import { getPrayerSettings } from "@/lib/tenant";
-import { updateSettings } from "./actions";
+import { deleteMasjid, updateSettings } from "./actions";
 
 export default async function PengaturanPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -24,6 +25,7 @@ export default async function PengaturanPage({ params }: { params: Promise<{ slu
           iqomahMinutes: prayer.iqomahMinutes,
         }}
       />
+      {!tenant.isDemo && <DeleteMasjidForm action={deleteMasjid.bind(null, slug)} slug={tenant.slug} name={tenant.name} />}
     </div>
   );
 }
