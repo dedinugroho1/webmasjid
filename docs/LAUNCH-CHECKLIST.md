@@ -13,6 +13,9 @@ Centang satu per satu sebelum mengumumkan WebMasjid ke masjid-masjid.
       mengikuti cara kerja aplikasi, **bukan nasihat hukum**; konsultasikan dengan penasihat hukum bila
       layanan dipakai secara komersial atau oleh banyak lembaga.
 - [ ] **Akun superadmin Anda:** daftar di `/daftar`, lalu `npm run superadmin -- email-anda@domain.com`.
+- [ ] **Putuskan moderasi:** di `/superadmin` → Pengaturan Platform. *Moderasi masjid baru* menahan masjid baru dari
+      direktori & Google sampai Anda setujui (disarankan saat peluncuran awal); matikan bila pendaftar sudah ramai dan
+      spam terkendali. *Pendaftaran dibuka* bisa dimatikan sewaktu-waktu bila ada serangan.
 - [ ] **Ganti password akun demo** (`admin@webmasjid.test`) atau set `SEED_DEMO=false`. Masjid demo bersifat
       hanya-baca, tetapi password-nya sebaiknya tidak dibiarkan default.
 - [ ] **Cabut semua kredensial yang pernah dibagikan lewat chat:** token Vercel, API key Neon, API key akun Bunny.
@@ -39,5 +42,6 @@ Centang satu per satu sebelum mengumumkan WebMasjid ke masjid-masjid.
 
 - [ ] Jalankan tes langsung ke production: `PROD_URL=https://domain-anda npm run test:prod`
       (butuh `.env.local` berisi koneksi database untuk membersihkan data uji).
-- [ ] Cek panel `/superadmin` berkala untuk pendaftaran mencurigakan; tangguhkan bila perlu.
-- [ ] Bila spam pendaftaran muncul: tambahkan moderasi masjid baru atau CAPTCHA (Cloudflare Turnstile).
+- [ ] Cek panel `/superadmin` berkala: antrean "Menunggu persetujuan" dan pendaftaran mencurigakan. Kontak admin tiap
+      masjid ada di daftar, dan tombol **Ekspor CSV** memberi daftar lengkap untuk dihubungi.
+- [ ] Bila spam pendaftaran masih lolos: aktifkan moderasi, atau tambahkan CAPTCHA (Cloudflare Turnstile).
