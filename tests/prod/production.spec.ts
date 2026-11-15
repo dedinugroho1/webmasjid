@@ -199,6 +199,19 @@ test("8. agenda, pengumuman, galeri", async () => {
   await expect(page.getByText("Foto ditambahkan ke galeri.")).toBeVisible();
 
   await page.goto(`/${SLUG}`);
+  // Bila Bunny dikonfigurasi (BUNNY_CDN_URL di environment tes), foto harus berasal dari CDN, bukan data URL.
+  const photo = await page.locator("section[aria-labelledby=galeri] img").first().getAttribute("src");
+  if (process.env.BUNNY_CDN_URL) {
+    expect(photo, "foto galeri harus memakai URL CDN Bunny").toContain(`${process.env.BUNNY_CDN_URL.replace(/\/+$/, "")}/`);
+    let status = 0;
+    for (let i = 0; i < 20 && status !== 200; i++) {
+      status = (await page.request.get(photo!)).status();
+      if (status !== 200) await page.waitForTimeout(3000);
+    }
+    expect(status, "CDN harus menyajikan foto").toBe(200);
+  } else {
+    expect(photo).toMatch(/^(data:|https?:)/);
+  }
   await expect(page.locator("section[aria-labelledby=pengumuman]")).toContainText("Pengumuman Uji Produksi");
   await expect(page.locator("section[aria-labelledby=agenda]")).toContainText("Tabligh Akbar Uji");
   await page.getByRole("button", { name: "Lihat foto: Foto uji produksi" }).click();
