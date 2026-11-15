@@ -275,6 +275,38 @@ export const routineKajian = pgTable(
   (t) => [index("routine_kajian_tenant_idx").on(t.tenantId, t.dayOfWeek)],
 );
 
+// ─── Riwayat Perubahan (audit log) ──────────────────────────────────────
+export type AuditEntity = "cash_transaction" | "member";
+export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "INVITE" | "ROLE" | "REMOVE" | "PASSWORD_RESET";
+
+/**
+ * Jejak perubahan yang tidak boleh hilang diam-diam: siapa mengubah apa dan
+ * kapan. Nama pelaku disalin (snapshot) agar tetap terbaca walau akunnya dihapus.
+ */
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: id(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    entity: text("entity").$type<AuditEntity>().notNull(),
+    entityId: text("entity_id"),
+    action: text("action").$type<AuditAction>().notNull(),
+    actorId: text("actor_id").references(() => users.id, { onDelete: "set null" }),
+    actorName: text("actor_name").notNull(),
+    /** Ringkasan satu kalimat yang langsung bisa dibaca. */
+    summary: text("summary").notNull(),
+    before: jsonb("before").$type<Record<string, unknown> | null>(),
+    after: jsonb("after").$type<Record<string, unknown> | null>(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("audit_tenant_created_idx").on(t.tenantId, t.createdAt),
+    index("audit_tenant_entity_idx").on(t.tenantId, t.entity, t.entityId),
+  ],
+);
+
 // ─── Pengumuman ─────────────────────────────────────────────────────────
 export const announcements = pgTable(
   "announcements",
@@ -426,6 +458,7 @@ export type MasjidEvent = typeof events.$inferSelect;
 export type PrayerSetting = typeof prayerSettings.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
 export type JumatSchedule = typeof jumatSchedules.$inferSelect;
 export type RoutineKajian = typeof routineKajian.$inferSelect;
 export type GalleryItem = typeof galleryItems.$inferSelect;

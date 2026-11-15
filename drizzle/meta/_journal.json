@@ -64,6 +64,13 @@
       "when": 1794703510652,
       "tag": "0008_demo_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794735126358,
+      "tag": "0009_audit_logs",
+      "breakpoints": true
     }
   ]
 }
