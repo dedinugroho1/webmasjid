@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import type { FormState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConsentCheckbox } from "./consent-checkbox";
 import { Field } from "./field";
 
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -28,6 +29,7 @@ export function AcceptInviteForm({ action, loggedInAs }: { action: Action; logge
           <Field label="Password" htmlFor="password" error={state?.fieldErrors?.password}>
             <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
           </Field>
+          <ConsentCheckbox error={state?.fieldErrors?.consent} />
         </>
       )}
       {state?.error && <p className="text-destructive text-sm">{state.error}</p>}

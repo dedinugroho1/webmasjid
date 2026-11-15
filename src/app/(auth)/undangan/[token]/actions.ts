@@ -17,6 +17,7 @@ const signUpSchema = z.object({
   name: z.string().trim().min(2, "Nama wajib diisi").max(100),
   email: z.email("Email tidak valid"),
   password: z.string().min(8, "Password minimal 8 karakter").max(128),
+  consent: z.literal("on", "Anda harus menyetujui Syarat & Ketentuan dan Kebijakan Privasi"),
 });
 
 /** Klaim undangan secara atomik (sekali pakai). */
