@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { invitations, sessions, tenants, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { checkLimits, clientIp, LIMITS } from "@/lib/rate-limit";
+import { isDisposableEmail, looksLikeSpamText } from "@/lib/spam";
 import { hashToken } from "@/lib/tokens";
 import type { FormState } from "../../actions";
 
@@ -58,6 +59,10 @@ export async function acceptInvitation(token: string, _prev: FormState, formData
 
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  if (isDisposableEmail(parsed.data.email)) {
+    return { fieldErrors: { email: ["Gunakan email aktif (bukan email sementara/sekali pakai)"] } };
+  }
+  if (looksLikeSpamText(parsed.data.name)) return { fieldErrors: { name: ["Nama tidak valid"] } };
 
   const inv = await claim(token);
   if (!inv) return { error: "Undangan tidak valid, sudah dipakai, atau kedaluwarsa." };
