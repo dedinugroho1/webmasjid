@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { jumatSchedules } from "@/db/schema";
 import { isFridayISO } from "@/lib/jumat";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 
 export type JumatState = { ok?: boolean; error?: string; savedAt?: number } | null;
@@ -21,7 +22,9 @@ const schema = z.object({ khatib: text, imam: text, muadzin: text, theme: text }
 
 /** Simpan petugas satu Jumat (upsert). Semua kolom kosong → baris dihapus. */
 export async function saveJumat(slug: string, date: string, _prev: JumatState, formData: FormData): Promise<JumatState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   if (!isFridayISO(date)) return { error: "Tanggal bukan hari Jumat." };
   const parsed = schema.safeParse({
     khatib: formData.get("khatib") ?? undefined,
