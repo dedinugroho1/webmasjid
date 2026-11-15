@@ -1,4 +1,4 @@
-import { expect, login, registerMasjid, test } from "./helpers";
+import { expect, registerMasjid, test } from "./helpers";
 
 test("catat pemasukan & pengeluaran, saldo, PDF, hapus", async ({ page }) => {
   const { slug } = await registerMasjid(page);
@@ -34,8 +34,8 @@ test("catat pemasukan & pengeluaran, saldo, PDF, hapus", async ({ page }) => {
 });
 
 test("nominal nol ditolak", async ({ page }) => {
-  await login(page);
-  await page.goto("/al-ikhlas/admin/kas");
+  const { slug } = await registerMasjid(page);
+  await page.goto(`/${slug}/admin/kas`);
   await page.fill("#amount", "0");
   await page.getByRole("button", { name: "Simpan Transaksi" }).click();
   await expect(page.getByText("Nominal harus lebih dari 0")).toBeVisible();
