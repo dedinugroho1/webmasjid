@@ -259,6 +259,14 @@ npm run dev   # → http://localhost:3000`}</code>
             Kontribusi di GitHub
           </a>
         </p>
+        <p className="mt-2 flex justify-center gap-4">
+          <Link href="/privasi" className="hover:text-foreground hover:underline">
+            Kebijakan Privasi
+          </Link>
+          <Link href="/syarat" className="hover:text-foreground hover:underline">
+            Syarat & Ketentuan
+          </Link>
+        </p>
       </footer>
     </>
   );
