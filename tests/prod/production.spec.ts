@@ -59,12 +59,15 @@ test("1. halaman publik & masjid demo", async () => {
 
 test("2. daftar masjid baru (Better Auth + tenant)", async () => {
   await page.goto("/daftar");
+  const openedAt = Date.now();
   await page.fill("#masjidName", `Masjid Uji ${stamp}`);
   await page.fill("#slug", SLUG);
   await page.selectOption("#city", "Bandung");
   await page.fill("#adminName", ADMIN.name);
   await page.fill("#email", ADMIN.email);
   await page.fill("#password", ADMIN.password);
+  // Form pendaftaran menolak kiriman < 3 detik (anti-bot).
+  await page.waitForTimeout(Math.max(0, 3500 - (Date.now() - openedAt)));
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await page.waitForURL(`**/${SLUG}/admin?welcome=1`);
   await expect(page.getByText(/Ahlan wa sahlan/)).toBeVisible();
