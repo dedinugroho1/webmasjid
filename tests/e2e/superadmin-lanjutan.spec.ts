@@ -173,6 +173,29 @@ test("pengguna: cari, ubah peran, password sementara, dan hapus akun", async ({ 
     await owner.page.goto(`/${slug}/admin/pengurus`);
     await expect(owner.page).toHaveURL(/error=forbidden/);
 
+    // Kontak masjid tetap tampil walau pengguna satu-satunya bukan lagi Admin DKM (Bendahara, lalu Superadmin).
+    await sa.page.goto(`/superadmin?q=${slug}`);
+    await expect(sa.page.getByTestId(`tenant-${slug}`).getByTestId("admin-contact")).toContainText(email);
+    await sa.page.goto(`/superadmin/pengguna?q=${encodeURIComponent(email)}`);
+    await sa.page.getByTestId(`user-${email}`).getByLabel(`Peran ${email}`).selectOption("SUPERADMIN");
+    await expect
+      .poll(async () => {
+        await sa.page.reload();
+        return sa.page.getByTestId(`user-${email}`).getByLabel(`Peran ${email}`).inputValue();
+      })
+      .toBe("SUPERADMIN");
+    await sa.page.goto(`/superadmin?q=${slug}`);
+    await expect(sa.page.getByTestId(`tenant-${slug}`).getByTestId("admin-contact")).toContainText(email);
+    // Kembalikan ke Bendahara untuk langkah berikutnya.
+    await sa.page.goto(`/superadmin/pengguna?q=${encodeURIComponent(email)}`);
+    await sa.page.getByTestId(`user-${email}`).getByLabel(`Peran ${email}`).selectOption("BENDAHARA");
+    await expect
+      .poll(async () => {
+        await sa.page.reload();
+        return sa.page.getByTestId(`user-${email}`).getByLabel(`Peran ${email}`).inputValue();
+      })
+      .toBe("BENDAHARA");
+
     // Password sementara: sesi lama dicabut, login dengan password baru berhasil.
     sa.page.once("dialog", (d) => d.accept());
     await sa.page.getByTestId(`user-${email}`).getByRole("button", { name: `Password sementara ${email}` }).click();
