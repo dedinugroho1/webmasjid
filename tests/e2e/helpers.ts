@@ -37,12 +37,20 @@ export function uniq(prefix: string) {
 export async function registerMasjid(page: Page) {
   const slug = uniq("uji");
   await page.goto("/daftar");
+  const openedAt = Date.now();
   await page.fill("#masjidName", `Masjid ${slug}`);
   await page.fill("#slug", slug);
   await page.fill("#adminName", "Admin Uji");
   await page.fill("#email", `${slug}@example.test`);
   await page.fill("#password", "rahasia123");
+  await waitForHumanPace(page, openedAt);
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await page.waitForURL(`**/${slug}/admin?welcome=1`);
   return { slug, email: `${slug}@example.test`, password: "rahasia123" };
+}
+
+/** Form pendaftaran menolak kiriman < 3 detik (anti-bot); tunggu seperti manusia. */
+export async function waitForHumanPace(page: Page, openedAt: number, minMs = 3500) {
+  const remaining = minMs - (Date.now() - openedAt);
+  if (remaining > 0) await page.waitForTimeout(remaining);
 }
