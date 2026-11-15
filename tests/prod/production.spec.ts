@@ -138,6 +138,14 @@ test("5. buku kas: infaq Jumat cepat, pengeluaran, edit, hapus", async () => {
 
   await page.goto(`/${SLUG}`);
   await expect(page.getByText("Kotak Jumat uji")).toBeVisible();
+
+  // Setiap tambah/ubah/hapus tercatat di riwayat perubahan, lengkap dengan pelakunya.
+  await page.goto(`/${SLUG}/admin/riwayat?jenis=kas`);
+  const audit = page.getByTestId("audit-list");
+  await expect(audit).toContainText("Menambah pemasukan Rp 2.500.000 · Infaq Jumat (Kotak Jumat uji)");
+  await expect(audit).toContainText("Mengubah pengeluaran Listrik: nominal Rp 300.000 → Rp 350.000");
+  await expect(audit).toContainText("Menghapus pemasukan Rp 1.000 · Infaq Jumat (Salah catat uji)");
+  await expect(audit.getByText(ADMIN.name).first()).toBeVisible();
 });
 
 test("6. laporan kas Jumat, PDF bulanan, cetak papan info", async () => {
@@ -289,6 +297,11 @@ test("11. superadmin: tangguhkan & pulihkan masjid", async () => {
   await page.fill("input[name=q]", SLUG);
   await page.getByRole("button", { name: "Cari" }).click();
   const row = page.getByTestId(`tenant-${SLUG}`);
+  // Bila moderasi sedang aktif di platform, setujui dulu agar sisa tes tidak bergantung pada pengaturan itu.
+  if (await row.getByText("Menunggu persetujuan").count()) {
+    await row.getByRole("button", { name: "Setujui" }).click();
+    await expect(row.getByText("Publik")).toBeVisible();
+  }
   page.once("dialog", (d) => d.accept("Uji produksi"));
   await row.getByRole("button", { name: "Tangguhkan" }).click();
   await expect(row.getByText("Ditangguhkan")).toBeVisible();
@@ -297,6 +310,20 @@ test("11. superadmin: tangguhkan & pulihkan masjid", async () => {
   await row.getByRole("button", { name: "Pulihkan" }).click();
   await expect(row.getByText("Publik")).toBeVisible();
   expect((await page.request.get(`/${SLUG}`)).status()).toBe(200);
+
+  // Kontak admin, ekspor CSV, dan tombol pengaturan platform (hanya dilihat, tidak diubah di production).
+  await expect(row.getByTestId("admin-contact")).toContainText(ADMIN.email);
+  await expect(page.getByTestId("switch-registration")).toBeVisible();
+  await expect(page.getByTestId("switch-moderation")).toBeVisible();
+  const csv = await page.request.get(`/superadmin/ekspor?q=${encodeURIComponent(SLUG)}`);
+  expect(csv.status()).toBe(200);
+  expect(await csv.text()).toContain(ADMIN.email);
+
+  // Halaman pengguna: akun uji ditemukan lewat email; akun sendiri tanpa tombol ubah.
+  await page.goto(`/superadmin/pengguna?q=${encodeURIComponent(ADMIN.email)}`);
+  const me = page.getByTestId(`user-${ADMIN.email}`);
+  await expect(me).toContainText("Anda");
+  await expect(me.getByRole("button")).toHaveCount(0);
 });
 
 test("12. batas percobaan API aktif", async ({ request }) => {
