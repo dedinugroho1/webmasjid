@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileDown, Megaphone, Paperclip, Pencil } from "lucide-react";
+import { FileDown, Megaphone, Paperclip, Pencil, Sheet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,11 @@ export default async function KasPage({ params, searchParams }: Props) {
           <Button asChild>
             <a href={`/${slug}/admin/kas/laporan?bulan=${month}`} target="_blank" rel="noreferrer">
               <FileDown /> PDF Bulanan
+            </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a href={`/${slug}/admin/kas/ekspor?bulan=${month}`} download>
+              <Sheet /> Excel
             </a>
           </Button>
         </form>
