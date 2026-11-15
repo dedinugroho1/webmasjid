@@ -275,6 +275,14 @@ export const routineKajian = pgTable(
   (t) => [index("routine_kajian_tenant_idx").on(t.tenantId, t.dayOfWeek)],
 );
 
+// ─── Pengaturan Platform ────────────────────────────────────────────────
+/** Pengaturan global yang diatur superadmin dari panel (bukan variabel lingkungan). */
+export const platformSettings = pgTable("platform_settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<unknown>().notNull(),
+  updatedAt: updatedAt(),
+});
+
 // ─── Riwayat Perubahan (audit log) ──────────────────────────────────────
 export type AuditEntity = "cash_transaction" | "member";
 export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "INVITE" | "ROLE" | "REMOVE" | "PASSWORD_RESET";
