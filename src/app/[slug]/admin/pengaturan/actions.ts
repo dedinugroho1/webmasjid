@@ -9,6 +9,7 @@ import { TIMEZONES } from "@/lib/constants";
 import { validateCustomDomain } from "@/lib/domains";
 import { CALCULATION_METHODS } from "@/lib/prayer";
 import { parseBankAccounts, parsePrayerTuning } from "@/lib/settings-parse";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 import { uploadImage } from "@/lib/storage";
 
@@ -41,7 +42,9 @@ const settingsSchema = z.object({
 });
 
 export async function updateSettings(slug: string, _prev: SettingsFormState, formData: FormData): Promise<SettingsFormState> {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
 
   const raw = Object.fromEntries([...formData.entries()].filter(([, v]) => typeof v === "string"));
   const parsed = settingsSchema.safeParse(raw);
