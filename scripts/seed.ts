@@ -51,6 +51,7 @@ async function main() {
       name: "Masjid Al-Ikhlas",
       slug: SLUG,
       isDemo: true, // bisa dijelajahi dengan akun demo, perubahan ditolak
+      approvedAt: new Date(),
       description: "Masjid jami' yang makmur, ramah anak, dan transparan. Contoh website dari platform WebMasjid.",
       address: "Jl. Merdeka No. 17, Menteng",
       city: "Jakarta",
