@@ -16,10 +16,13 @@ export function parseTenantSort(v: string | undefined): TenantSort {
 }
 
 // Subquery berkorelasi: murah karena hanya dijalankan untuk satu halaman (20 baris).
-const adminName = sql<string | null>`(select u.name from ${users} u where u.tenant_id = ${tenants.id} and u.role = 'DKM_ADMIN' order by u.created_at asc limit 1)`;
-const adminEmail = sql<string | null>`(select u.email from ${users} u where u.tenant_id = ${tenants.id} and u.role = 'DKM_ADMIN' order by u.created_at asc limit 1)`;
-const memberCount = sql<number>`(select count(*)::int from ${users} u where u.tenant_id = ${tenants.id})`;
-const txCount = sql<number>`(select count(*)::int from ${cashTransactions} c where c.tenant_id = ${tenants.id})`;
+// Kolom tenants.id ditulis eksplisit: Drizzle membuang awalan tabel pada query satu-tabel,
+// sehingga `${tenants.id}` di dalam subquery terbaca sebagai kolom `id` milik `users`.
+const TENANT_ID = sql.raw('"tenants"."id"');
+const adminName = sql<string | null>`(select u.name from ${users} u where u.tenant_id = ${TENANT_ID} and u.role = 'DKM_ADMIN' order by u.created_at asc limit 1)`;
+const adminEmail = sql<string | null>`(select u.email from ${users} u where u.tenant_id = ${TENANT_ID} and u.role = 'DKM_ADMIN' order by u.created_at asc limit 1)`;
+const memberCount = sql<number>`(select count(*)::int from ${users} u where u.tenant_id = ${TENANT_ID})`;
+const txCount = sql<number>`(select count(*)::int from ${cashTransactions} c where c.tenant_id = ${TENANT_ID})`;
 
 /** Kondisi pencarian & filter, dipakai juga oleh ekspor CSV. */
 export function tenantWhere(q: string, filter: TenantFilter): SQL | undefined {
@@ -32,7 +35,7 @@ export function tenantWhere(q: string, filter: TenantFilter): SQL | undefined {
         ilike(tenants.name, like),
         ilike(tenants.slug, like),
         ilike(tenants.city, like),
-        sql`exists (select 1 from ${users} u where u.tenant_id = ${tenants.id} and (u.email ilike ${like} or u.name ilike ${like}))`,
+        sql`exists (select 1 from ${users} u where u.tenant_id = ${TENANT_ID} and (u.email ilike ${like} or u.name ilike ${like}))`,
       ),
     );
   }
