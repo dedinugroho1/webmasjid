@@ -18,6 +18,7 @@ const PNG = Buffer.from(
   "base64",
 );
 
+let galleryPhoto: string | null = null;
 let ctx: BrowserContext;
 let page: Page;
 
@@ -202,6 +203,7 @@ test("8. agenda, pengumuman, galeri", async () => {
   await page.goto(`/${SLUG}`);
   // Bila Bunny dikonfigurasi (BUNNY_CDN_URL di environment tes), foto harus berasal dari CDN, bukan data URL.
   const photo = await page.locator("section[aria-labelledby=galeri] img").first().getAttribute("src");
+  galleryPhoto = photo;
   if (process.env.BUNNY_CDN_URL) {
     expect(photo, "foto galeri harus memakai URL CDN Bunny").toContain(`${process.env.BUNNY_CDN_URL.replace(/\/+$/, "")}/`);
     let status = 0;
@@ -346,6 +348,21 @@ test("14. mode demo: bisa dijelajahi, perubahan ditolak", async ({ browser }) =>
   await dctx.close();
 });
 
+test("15a. halaman hukum, health check, dan tanpa placeholder di landing", async ({ request }) => {
+  expect((await request.get("/privasi")).status()).toBe(200);
+  expect((await request.get("/syarat")).status()).toBe(200);
+  const health = await request.get("/api/health");
+  expect(health.status()).toBe(200);
+  expect(await health.json()).toMatchObject({ status: "ok", db: "ok" });
+
+  await page.goto("/");
+  const html = await page.content();
+  expect(html).not.toContain("NEXT_PUBLIC_PLATFORM_QRIS_URL");
+  expect(html).not.toContain("halo@webmasjid.com");
+  await page.getByRole("link", { name: "Kebijakan Privasi" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Kebijakan Privasi" })).toBeVisible();
+});
+
 test("15. pratinjau tautan, robots, sitemap & PWA", async ({ request }) => {
   await page.goto("/al-ikhlas");
   const og = await page.locator('meta[property="og:image"]').getAttribute("content");
@@ -366,4 +383,30 @@ test("16. tampilan HP tidak melebar", async ({ browser }) => {
     await noHorizontalScroll(mp);
   }
   await m.close();
+});
+
+test("17. hapus masjid: halaman, akun, dan foto di Bunny ikut terhapus", async () => {
+  // Akun uji berstatus superadmin sejak tes 11; ia boleh menghapus masjid, akunnya tidak ikut terhapus.
+  await page.goto(`/${SLUG}/admin/pengaturan`);
+  page.once("dialog", (d) => d.accept());
+  await page.getByLabel(/Ketik/).fill("salah");
+  await page.getByRole("button", { name: "Hapus Masjid Permanen" }).click();
+  await expect(page.getByText(/Ketik persis/)).toBeVisible();
+  expect((await page.request.get(`/${SLUG}`)).status()).toBe(200);
+
+  page.once("dialog", (d) => d.accept());
+  await page.getByLabel(/Ketik/).fill(SLUG);
+  await page.getByRole("button", { name: "Hapus Masjid Permanen" }).click();
+  await page.waitForURL(/\/masuk\?dihapus=1/);
+  await expect(page.getByText(/telah dihapus permanen/)).toBeVisible();
+  expect((await page.request.get(`/${SLUG}`)).status()).toBe(404);
+
+  if (process.env.BUNNY_CDN_URL && galleryPhoto?.startsWith(process.env.BUNNY_CDN_URL.replace(/\/+$/, ""))) {
+    let status = 200;
+    for (let i = 0; i < 20 && status !== 404; i++) {
+      status = (await page.request.get(galleryPhoto, { headers: { "Cache-Control": "no-cache" } })).status();
+      if (status !== 404) await page.waitForTimeout(3000);
+    }
+    expect(status, "foto di CDN harus hilang setelah masjid dihapus").toBe(404);
+  }
 });
