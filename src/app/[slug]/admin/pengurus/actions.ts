@@ -6,6 +6,7 @@ import { z } from "zod";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "@/db";
 import { accounts, invitations, sessions, users } from "@/db/schema";
+import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 import { generateTempPassword, generateToken, hashToken } from "@/lib/tokens";
 import { appUrl } from "@/lib/utils";
@@ -35,7 +36,9 @@ const inviteSchema = z.object({
 });
 
 export async function createInvitation(slug: string, _prev: InviteState, formData: FormData): Promise<InviteState> {
-  const { tenant, user } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = inviteSchema.safeParse({ role: formData.get("role"), note: formData.get("note") || undefined });
   if (!parsed.success) return { error: "Data undangan tidak valid." };
 
@@ -54,7 +57,9 @@ export async function createInvitation(slug: string, _prev: InviteState, formDat
 }
 
 export async function revokeInvitation(slug: string, id: string) {
-  const { tenant } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant } = access;
+  if (isReadOnlyDemo(access)) return;
   await db
     .delete(invitations)
     .where(and(eq(invitations.id, id), eq(invitations.tenantId, tenant.id), isNull(invitations.acceptedAt)));
@@ -63,7 +68,9 @@ export async function revokeInvitation(slug: string, id: string) {
 
 // ─── Kelola anggota ─────────────────────────────────────────────────────
 export async function updateMemberRole(slug: string, userId: string, role: string) {
-  const { tenant, user } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return;
   const parsedRole = z.enum(MANAGEABLE_ROLES).safeParse(role);
   if (!parsedRole.success) return;
   const res = await getManagedMember(tenant.id, user.id, userId);
@@ -73,7 +80,9 @@ export async function updateMemberRole(slug: string, userId: string, role: strin
 }
 
 export async function removeMember(slug: string, userId: string) {
-  const { tenant, user } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return;
   const res = await getManagedMember(tenant.id, user.id, userId);
   if ("error" in res) return;
   await db.transaction(async (tx) => {
@@ -89,7 +98,9 @@ export async function removeMember(slug: string, userId: string) {
  * dikonfigurasi). Semua sesi pengurus tersebut dicabut.
  */
 export async function resetMemberPassword(slug: string, userId: string): Promise<ResetResult> {
-  const { tenant, user } = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const access = await requireTenantAccess(slug, ["DKM_ADMIN"]);
+  const { tenant, user } = access;
+  if (isReadOnlyDemo(access)) return { ok: false, error: DEMO_READONLY_MESSAGE };
   const res = await getManagedMember(tenant.id, user.id, userId);
   if ("error" in res) return { ok: false, error: res.error ?? "Gagal" };
 
