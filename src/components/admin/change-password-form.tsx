@@ -27,6 +27,7 @@ export function ChangePasswordForm({ action }: { action: Action }) {
         <Button type="submit" variant="outline" disabled={pending}>
           {pending && <Loader2 className="animate-spin" />} Ganti Password
         </Button>
+        {state?.error && <p className="text-destructive text-sm">{state.error}</p>}
       </div>
     </form>
   );
