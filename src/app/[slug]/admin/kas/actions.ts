@@ -86,12 +86,26 @@ export async function updateTransaction(
     return { fieldErrors: { receipt: [(e as Error).message] } };
   }
 
+  // Bukti lama dihapus dari penyimpanan hanya bila diganti/dihapus & update berhasil.
+  const [before] =
+    "receiptUrl" in receipt
+      ? await db
+          .select({ receiptUrl: cashTransactions.receiptUrl })
+          .from(cashTransactions)
+          .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
+          .limit(1)
+      : [];
+
   const updated = await db
     .update(cashTransactions)
     .set({ ...parsed.data, description: parsed.data.description || null, ...receipt })
     .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
     .returning({ id: cashTransactions.id });
-  if (!updated.length) return { error: "Transaksi tidak ditemukan." };
+  if (!updated.length) {
+    await deleteImage(receipt.receiptUrl); // unggahan baru tidak terpakai
+    return { error: "Transaksi tidak ditemukan." };
+  }
+  if (before?.receiptUrl && before.receiptUrl !== receipt.receiptUrl) await deleteImage(before.receiptUrl);
 
   revalidatePath(`/${slug}`, "layout");
   redirect(`/${slug}/admin/kas?bulan=${parsed.data.transactionDate.slice(0, 7)}`);
