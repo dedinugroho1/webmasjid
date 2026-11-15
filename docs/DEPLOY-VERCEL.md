@@ -46,7 +46,28 @@ sesuai rekomendasi Neon untuk Vercel Fluid compute. `DATABASE_DRIVER=neon` memak
 | `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL` | **kosongkan** saat memakai subdomain Vercel — terdeteksi otomatis. Isi `https://domain-anda` setelah memasang domain sendiri. |
 | `PLATFORM_HOSTS` | domain milik platform bila memakai domain sendiri, mis. `webmasjid.com,www.webmasjid.com` |
 | `RESEND_API_KEY`, `EMAIL_FROM` | opsional, untuk email lupa password |
-| `BLOB_READ_WRITE_TOKEN` | opsional — otomatis terisi bila menambahkan **Storage → Blob** (foto > 300 KB) |
+| `BUNNY_STORAGE_ZONE`, `BUNNY_STORAGE_PASSWORD`, `BUNNY_STORAGE_REGION`, `BUNNY_CDN_URL` | disarankan — penyimpanan foto di Bunny (lihat bagian *Penyimpanan foto*) |
+
+## Penyimpanan foto (Bunny Storage)
+
+Logo, QRIS, foto sampul, galeri, dan bukti transaksi disimpan di [Bunny Storage](https://bunny.net).
+Tanpa konfigurasi ini foto tetap bisa diunggah, tetapi disimpan di database (maks 300 KB).
+
+1. Di dashboard Bunny: **Storage → Add Storage Zone**. Beri nama (mis. `webmasjid`) dan pilih region
+   utama; untuk pengguna di Indonesia, **Singapore** paling dekat.
+2. Buka zone tersebut → **FTP & API Access** → salin **Password** (ini `BUNNY_STORAGE_PASSWORD`).
+3. Di zone yang sama: **Connected Pull Zones → Connect Pull Zone** (buat baru bila belum ada).
+   Salin hostname Pull Zone, mis. `webmasjid.b-cdn.net` (ini `BUNNY_CDN_URL`).
+4. Isi variabel di Vercel, lalu Redeploy:
+
+   | Variabel | Contoh |
+   | --- | --- |
+   | `BUNNY_STORAGE_ZONE` | `webmasjid` |
+   | `BUNNY_STORAGE_PASSWORD` | password zone dari langkah 2 |
+   | `BUNNY_STORAGE_REGION` | `sg` (kosongkan bila region utama/Falkenstein) |
+   | `BUNNY_CDN_URL` | `https://webmasjid.b-cdn.net` |
+
+Foto lama otomatis dihapus dari Bunny ketika diganti, dihapus, atau transaksinya dihapus.
 
 ## 4. Deploy & uji
 
@@ -74,4 +95,6 @@ Bila konfigurasi belum lengkap, build **tetap berhasil** dan situs menampilkan h
 | Halaman "Setup belum selesai" — `BETTER_AUTH_SECRET` | Tambahkan di **Settings → Environment Variables** (min. 32 karakter), lalu Redeploy. |
 | "Tabel belum dibuat" | Env baru diisi setelah build terakhir — Redeploy agar migrasi berjalan. |
 | Log build: `Tidak bisa terhubung ke database` | `DATABASE_URL` salah/kedaluwarsa — salin ulang dari dashboard Neon. |
-| Foto gagal diunggah | Lebih dari 300 KB tanpa Vercel Blob — tambahkan Storage → Blob. |
+| Foto gagal diunggah: "maksimal 300 KB" | Variabel Bunny belum lengkap (keempatnya wajib, kecuali `BUNNY_STORAGE_REGION`). Isi lalu Redeploy. |
+| Foto gagal diunggah: "menolak akses" | `BUNNY_STORAGE_PASSWORD` salah — pakai password **Storage Zone**, bukan API key akun Bunny. |
+| Foto terunggah tapi tidak tampil | `BUNNY_CDN_URL` bukan Pull Zone milik zone tersebut, atau Pull Zone belum aktif. |
