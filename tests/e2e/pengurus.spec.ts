@@ -17,6 +17,7 @@ test("undang bendahara, batasi akses, password sementara, keluarkan", async ({ p
   await bend.fill("#name", "Bu Bendahara");
   await bend.fill("#email", email);
   await bend.fill("#password", "bendahara123");
+  await bend.check("input[name=consent]");
   await bend.getByRole("button", { name: /Buat Akun/ }).click();
   await bend.waitForURL(`**/${slug}/admin`);
 

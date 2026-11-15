@@ -44,6 +44,7 @@ export async function registerMasjid(page: Page) {
   await page.fill("#email", `${slug}@example.test`);
   await page.fill("#password", "rahasia123");
   await waitForHumanPace(page, openedAt);
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await page.waitForURL(`**/${slug}/admin?welcome=1`);
   return { slug, email: `${slug}@example.test`, password: "rahasia123" };

@@ -11,6 +11,7 @@ async function fill(page: import("@playwright/test").Page, data: { masjid: strin
 test("pendaftaran yang dikirim terlalu cepat ditolak (bot)", async ({ page }) => {
   await page.goto("/daftar");
   await fill(page, { masjid: "Masjid Bot Cepat", admin: "Bot", email: `${uniq("bot")}@example.test` });
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText(/terlalu cepat/)).toBeVisible();
   // Isian tetap ada; setelah menunggu, kiriman ulang diterima.
@@ -22,11 +23,13 @@ test("email sekali pakai dan nama berisi tautan ditolak", async ({ page }) => {
   const openedAt = Date.now();
   await fill(page, { masjid: "Masjid Nurul Iman", admin: "Pak Iman", email: "iseng@mailinator.com" });
   await waitForHumanPace(page, openedAt);
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText(/bukan email sementara/)).toBeVisible();
 
   await page.fill("#email", `${uniq("iman")}@example.test`);
   await page.fill("#masjidName", "Promo slot gacor www.contoh.xyz");
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText(/tidak boleh berisi tautan/)).toBeVisible();
 });
@@ -39,6 +42,7 @@ test("token waktu palsu ditolak", async ({ page }) => {
     (document.querySelector("input[name=formToken]") as HTMLInputElement).value = `${Date.now() - 60_000}.palsu`;
   });
   await waitForHumanPace(page, openedAt);
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText(/kedaluwarsa/)).toBeVisible();
 });

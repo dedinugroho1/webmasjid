@@ -39,6 +39,7 @@ test("slug cadangan ditolak", async ({ page }) => {
   await page.fill("#adminName", "X");
   await page.fill("#email", "x-reserved@example.test");
   await page.fill("#password", "rahasia123");
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText(/dicadangkan/)).toBeVisible();
 });
@@ -50,6 +51,7 @@ test("honeypot menolak bot", async ({ page }) => {
   await page.fill("#email", "bot@example.test");
   await page.fill("#password", "botbotbot1");
   await page.evaluate(() => ((document.querySelector("input[name=website]") as HTMLInputElement).value = "spam"));
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText("Pendaftaran gagal. Silakan coba lagi.")).toBeVisible();
 });
@@ -68,6 +70,7 @@ test("isian form tidak hilang setelah error (login & daftar)", async ({ page }) 
   await page.fill("#adminName", "Pak Tetap");
   await page.fill("#email", "tetap@example.test");
   await page.fill("#password", "rahasia123");
+  await page.check("input[name=consent]");
   await page.getByRole("button", { name: /Daftarkan Masjid/ }).click();
   await expect(page.getByText(/dicadangkan/)).toBeVisible();
   await expect(page.locator("#masjidName")).toHaveValue("Masjid Tetap Terisi");
