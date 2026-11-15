@@ -26,6 +26,8 @@ Centang satu per satu sebelum mengumumkan WebMasjid ke masjid-masjid.
 - [ ] **Domain `webmasjid.com`:** hubungkan di Vercel → Domains, lalu isi `NEXT_PUBLIC_APP_URL`,
       `BETTER_AUTH_URL`, dan `PLATFORM_HOSTS` ([SELF-HOSTING.md](SELF-HOSTING.md)).
 - [ ] **Email lupa password:** `RESEND_API_KEY` dan `EMAIL_FROM`.
+- [ ] **Cache Pull Zone Bunny:** turunkan *Cache Expiration Time* (mis. 1 jam) agar foto yang dihapus cepat tidak
+      terbuka lagi lewat alamat langsungnya ([DEPLOY-VERCEL.md](DEPLOY-VERCEL.md)).
 - [ ] **Uptime monitor** (mis. UptimeRobot/BetterStack, gratis) ke `https://domain-anda/api/health`
       (200 = sehat, 503 = database bermasalah).
 - [ ] **Pantau kuota gratis:** Neon (jam komputasi/penyimpanan), Vercel, dan Bunny. Kuota Neon yang habis
