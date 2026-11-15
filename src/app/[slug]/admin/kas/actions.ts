@@ -6,6 +6,8 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { cashTransactions } from "@/db/schema";
+import { diffTransaction, snapshotTransaction, summarizeTransaction } from "@/lib/audit";
+import { recordAudit } from "@/lib/audit-log";
 import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 import { deleteImage, uploadImage } from "@/lib/storage";
@@ -52,13 +54,33 @@ export async function createTransaction(slug: string, _prev: KasFormState, formD
     return { fieldErrors: { receipt: [(e as Error).message] } };
   }
 
-  await db.insert(cashTransactions).values({
-    ...parsed.data,
-    description: parsed.data.description || null,
-    tenantId: tenant.id, // selalu dari tenant terverifikasi, bukan dari input form
-    receiptUrl,
-    createdBy: user.id,
-  });
+  try {
+    await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(cashTransactions)
+        .values({
+          ...parsed.data,
+          description: parsed.data.description || null,
+          tenantId: tenant.id, // selalu dari tenant terverifikasi, bukan dari input form
+          receiptUrl,
+          createdBy: user.id,
+        })
+        .returning();
+      const snap = snapshotTransaction(row);
+      await recordAudit(tx, {
+        tenantId: tenant.id,
+        entity: "cash_transaction",
+        entityId: row.id,
+        action: "CREATE",
+        actor: user,
+        summary: summarizeTransaction("CREATE", snap),
+        after: snap,
+      });
+    });
+  } catch (e) {
+    await deleteImage(receiptUrl); // unggahan tidak terpakai
+    throw e;
+  }
 
   revalidatePath(`/${slug}`, "layout");
   return { ok: true };
@@ -71,7 +93,7 @@ export async function updateTransaction(
   formData: FormData,
 ): Promise<KasFormState> {
   const access = await requireTenantAccess(slug, [...KAS_ROLES]);
-  const { tenant } = access;
+  const { tenant, user } = access;
   if (isReadOnlyDemo(access)) return { error: DEMO_READONLY_MESSAGE };
   const parsed = parseTransaction(formData);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
@@ -86,26 +108,49 @@ export async function updateTransaction(
     return { fieldErrors: { receipt: [(e as Error).message] } };
   }
 
-  // Bukti lama dihapus dari penyimpanan hanya bila diganti/dihapus & update berhasil.
-  const [before] =
-    "receiptUrl" in receipt
-      ? await db
-          .select({ receiptUrl: cashTransactions.receiptUrl })
-          .from(cashTransactions)
-          .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
-          .limit(1)
-      : [];
-
-  const updated = await db
-    .update(cashTransactions)
-    .set({ ...parsed.data, description: parsed.data.description || null, ...receipt })
-    .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
-    .returning({ id: cashTransactions.id });
-  if (!updated.length) {
+  // Ubah + catat riwayat dalam satu transaksi database.
+  let previousReceipt: string | null = null;
+  let found = true;
+  try {
+    await db.transaction(async (tx) => {
+      const scope = and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id));
+      const [old] = await tx.select().from(cashTransactions).where(scope).limit(1);
+      if (!old) {
+        found = false;
+        return;
+      }
+      const [row] = await tx
+        .update(cashTransactions)
+        .set({ ...parsed.data, description: parsed.data.description || null, ...receipt })
+        .where(scope)
+        .returning();
+      previousReceipt = old.receiptUrl;
+      const before = snapshotTransaction(old);
+      const after = snapshotTransaction(row);
+      const changes = diffTransaction(before, after);
+      if (changes.length) {
+        await recordAudit(tx, {
+          tenantId: tenant.id,
+          entity: "cash_transaction",
+          entityId: id,
+          action: "UPDATE",
+          actor: user,
+          summary: summarizeTransaction("UPDATE", after, changes),
+          before,
+          after,
+        });
+      }
+    });
+  } catch (e) {
     await deleteImage(receipt.receiptUrl); // unggahan baru tidak terpakai
+    throw e;
+  }
+  if (!found) {
+    await deleteImage(receipt.receiptUrl);
     return { error: "Transaksi tidak ditemukan." };
   }
-  if (before?.receiptUrl && before.receiptUrl !== receipt.receiptUrl) await deleteImage(before.receiptUrl);
+  // Bukti lama dihapus dari penyimpanan hanya bila diganti/dihapus & update berhasil.
+  if ("receiptUrl" in receipt && previousReceipt && previousReceipt !== receipt.receiptUrl) await deleteImage(previousReceipt);
 
   revalidatePath(`/${slug}`, "layout");
   redirect(`/${slug}/admin/kas?bulan=${parsed.data.transactionDate.slice(0, 7)}`);
@@ -113,12 +158,26 @@ export async function updateTransaction(
 
 export async function deleteTransaction(slug: string, id: string) {
   const access = await requireTenantAccess(slug, [...KAS_ROLES]);
-  const { tenant } = access;
+  const { tenant, user } = access;
   if (isReadOnlyDemo(access)) return;
-  const [removed] = await db
-    .delete(cashTransactions)
-    .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
-    .returning({ receiptUrl: cashTransactions.receiptUrl });
+  const removed = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .delete(cashTransactions)
+      .where(and(eq(cashTransactions.id, id), eq(cashTransactions.tenantId, tenant.id)))
+      .returning();
+    if (!row) return null;
+    const snap = snapshotTransaction(row);
+    await recordAudit(tx, {
+      tenantId: tenant.id,
+      entity: "cash_transaction",
+      entityId: id,
+      action: "DELETE",
+      actor: user,
+      summary: summarizeTransaction("DELETE", snap),
+      before: snap,
+    });
+    return row;
+  });
   await deleteImage(removed?.receiptUrl);
   revalidatePath(`/${slug}`, "layout");
 }
