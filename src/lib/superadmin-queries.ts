@@ -19,8 +19,10 @@ export function parseTenantSort(v: string | undefined): TenantSort {
 // Kolom tenants.id ditulis eksplisit: Drizzle membuang awalan tabel pada query satu-tabel,
 // sehingga `${tenants.id}` di dalam subquery terbaca sebagai kolom `id` milik `users`.
 const TENANT_ID = sql.raw('"tenants"."id"');
-const adminName = sql<string | null>`(select u.name from ${users} u where u.tenant_id = ${TENANT_ID} and u.role = 'DKM_ADMIN' order by u.created_at asc limit 1)`;
-const adminEmail = sql<string | null>`(select u.email from ${users} u where u.tenant_id = ${TENANT_ID} and u.role = 'DKM_ADMIN' order by u.created_at asc limit 1)`;
+// Kontak utama: Admin DKM dulu, lalu Superadmin yang terikat ke masjid, lalu pengguna mana pun (yang tertua).
+const CONTACT_ORDER = sql.raw(`case u.role when 'DKM_ADMIN' then 0 when 'SUPERADMIN' then 1 else 2 end, u.created_at asc`);
+const adminName = sql<string | null>`(select u.name from ${users} u where u.tenant_id = ${TENANT_ID} order by ${CONTACT_ORDER} limit 1)`;
+const adminEmail = sql<string | null>`(select u.email from ${users} u where u.tenant_id = ${TENANT_ID} order by ${CONTACT_ORDER} limit 1)`;
 const memberCount = sql<number>`(select count(*)::int from ${users} u where u.tenant_id = ${TENANT_ID})`;
 const txCount = sql<number>`(select count(*)::int from ${cashTransactions} c where c.tenant_id = ${TENANT_ID})`;
 
