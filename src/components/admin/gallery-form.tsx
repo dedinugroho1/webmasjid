@@ -58,6 +58,7 @@ export function GalleryForm({ action, today }: { action: Action; today: string }
           <Input id="takenAt" name="takenAt" type="date" defaultValue={today} />
         </Field>
       </div>
+      {state?.error && <p className="text-destructive text-sm">{state.error}</p>}
       {state?.ok && <p className="text-sm text-emerald-700">Foto ditambahkan ke galeri.</p>}
       <Button type="submit" disabled={pending || processing}>
         {pending || processing ? <Loader2 className="animate-spin" /> : <ImagePlus />} Unggah Foto
