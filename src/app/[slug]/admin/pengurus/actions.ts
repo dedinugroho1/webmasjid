@@ -8,6 +8,8 @@ import { db } from "@/db";
 import { accounts, invitations, sessions, users } from "@/db/schema";
 import { DEMO_READONLY_MESSAGE, isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
+import { recordAudit } from "@/lib/audit-log";
+import { ROLE_LABELS } from "@/lib/constants";
 import { generateTempPassword, generateToken, hashToken } from "@/lib/tokens";
 import { appUrl } from "@/lib/utils";
 
@@ -21,7 +23,7 @@ export type ResetResult = { ok: true; password: string } | { ok: false; error: s
 async function getManagedMember(tenantId: string, actorId: string, userId: string) {
   if (userId === actorId) return { error: "Tidak bisa mengubah akun Anda sendiri dari sini." } as const;
   const [member] = await db
-    .select({ id: users.id, role: users.role })
+    .select({ id: users.id, role: users.role, name: users.name, email: users.email })
     .from(users)
     .where(and(eq(users.id, userId), eq(users.tenantId, tenantId)))
     .limit(1);
@@ -43,13 +45,26 @@ export async function createInvitation(slug: string, _prev: InviteState, formDat
   if (!parsed.success) return { error: "Data undangan tidak valid." };
 
   const token = generateToken();
-  await db.insert(invitations).values({
-    tenantId: tenant.id,
-    role: parsed.data.role,
-    note: parsed.data.note ?? null,
-    tokenHash: hashToken(token),
-    expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * 86_400_000),
-    createdBy: user.id,
+  await db.transaction(async (tx) => {
+    const [inv] = await tx
+      .insert(invitations)
+      .values({
+        tenantId: tenant.id,
+        role: parsed.data.role,
+        note: parsed.data.note ?? null,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + INVITE_TTL_DAYS * 86_400_000),
+        createdBy: user.id,
+      })
+      .returning({ id: invitations.id });
+    await recordAudit(tx, {
+      tenantId: tenant.id,
+      entity: "member",
+      entityId: inv.id,
+      action: "INVITE",
+      actor: user,
+      summary: `Membuat undangan ${ROLE_LABELS[parsed.data.role]}${parsed.data.note ? ` (${parsed.data.note})` : ""}`,
+    });
   });
 
   revalidatePath(`/${slug}/admin/pengurus`);
@@ -75,7 +90,20 @@ export async function updateMemberRole(slug: string, userId: string, role: strin
   if (!parsedRole.success) return;
   const res = await getManagedMember(tenant.id, user.id, userId);
   if ("error" in res) return;
-  await db.update(users).set({ role: parsedRole.data }).where(eq(users.id, userId));
+  if (res.member.role === parsedRole.data) return;
+  await db.transaction(async (tx) => {
+    await tx.update(users).set({ role: parsedRole.data }).where(eq(users.id, userId));
+    await recordAudit(tx, {
+      tenantId: tenant.id,
+      entity: "member",
+      entityId: userId,
+      action: "ROLE",
+      actor: user,
+      summary: `Mengubah peran ${res.member.name} dari ${ROLE_LABELS[res.member.role]} menjadi ${ROLE_LABELS[parsedRole.data]}`,
+      before: { role: res.member.role },
+      after: { role: parsedRole.data },
+    });
+  });
   revalidatePath(`/${slug}/admin/pengurus`);
 }
 
@@ -89,6 +117,14 @@ export async function removeMember(slug: string, userId: string) {
     await tx.update(users).set({ tenantId: null }).where(eq(users.id, userId));
     // Paksa keluar dari semua perangkat.
     await tx.delete(sessions).where(eq(sessions.userId, userId));
+    await recordAudit(tx, {
+      tenantId: tenant.id,
+      entity: "member",
+      entityId: userId,
+      action: "REMOVE",
+      actor: user,
+      summary: `Mengeluarkan ${res.member.name} (${res.member.email}) dari pengurus`,
+    });
   });
   revalidatePath(`/${slug}/admin/pengurus`);
 }
@@ -113,6 +149,16 @@ export async function resetMemberPassword(slug: string, userId: string): Promise
       .where(and(eq(accounts.userId, userId), eq(accounts.providerId, "credential")))
       .returning({ id: accounts.id });
     await tx.delete(sessions).where(eq(sessions.userId, userId));
+    if (rows.length) {
+      await recordAudit(tx, {
+        tenantId: tenant.id,
+        entity: "member",
+        entityId: userId,
+        action: "PASSWORD_RESET",
+        actor: user,
+        summary: `Membuat password sementara untuk ${res.member.name} (${res.member.email})`,
+      });
+    }
     return rows.length;
   });
   if (!updated) return { ok: false, error: "Akun ini tidak memakai login email & password." };
