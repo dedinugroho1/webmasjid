@@ -69,12 +69,15 @@ tenants ─┬─< users ──< sessions
          ├─< cash_transactions   (type IN/OUT, fund OPERASIONAL/PEMBANGUNAN, amount bigint Rupiah)
          ├─< events              (type KAJIAN/JUMAT/SOSIAL, speaker=khatib, imam)
          ├─< announcements       (is_pinned, expires_at)
+         ├─< audit_logs          (entity, action, actor_name, summary, before/after jsonb)
          ├─< gallery_items
          ├─< invitations         (token_hash, role, expires_at, accepted_at)
          └── prayer_settings     (calculation_method, adjustments, iqomah_minutes) — 1:1
-verifications (Better Auth) · rate_limits
+verifications (Better Auth) · rate_limits · platform_settings (registration_open, moderation_enabled)
 ```
 
+`tenants.approved_at` = `NULL` berarti masjid menunggu persetujuan (moderasi aktif): tidak masuk direktori/sitemap dan
+halamannya `noindex`, tetapi dashboard tetap bisa dipakai. Migrasi memberi nilai `created_at` pada masjid yang sudah ada.
 `tenants.suspended_at` menandai masjid yang ditangguhkan superadmin (halaman publik 404, pengurus tidak bisa masuk).
 Nominal disimpan sebagai `bigint` Rupiah utuh (tanpa desimal) untuk menghindari galat floating-point.
 `transaction_date` bertipe `date` agar laporan bulanan tidak terpengaruh zona waktu.
@@ -99,3 +102,19 @@ Bunny tiruan (`tests/e2e/mock-bunny.mjs`).
 
 `GET /{slug}/admin/kas/laporan?bulan=YYYY-MM` → `@react-pdf/renderer` (`renderToBuffer`, Node runtime):
 ringkasan saldo awal/masuk/keluar/akhir per kas, rincian transaksi, dan kolom tanda tangan Ketua DKM & Bendahara.
+
+## Riwayat perubahan (audit log)
+
+`src/lib/audit.ts` (logika murni: potret transaksi, perbandingan sebelum/sesudah, ringkasan berbahasa Indonesia) dan
+`src/lib/audit-log.ts` (tulis/baca). Setiap tambah, ubah, dan hapus transaksi kas, serta undangan, perubahan peran,
+pengeluaran pengurus, dan reset password, ditulis ke tabel `audit_logs` **di dalam transaksi database yang sama** dengan
+perubahannya, sehingga tidak pernah ada perubahan tanpa jejak. Nama pelaku disalin (snapshot) agar tetap terbaca bila akunnya
+dihapus. Aplikasi hanya menyediakan penulisan dan pembacaan; tidak ada fitur mengubah atau menghapus riwayat. Riwayat ikut
+terhapus (cascade) saat masjid dihapus.
+
+## Panel superadmin
+
+`/superadmin` (Masjid) dan `/superadmin/pengguna` dilindungi `requireSuperadmin()`. Pengaturan global (pendaftaran dibuka,
+moderasi) disimpan di `platform_settings` dan menimpa default dari environment tanpa deploy ulang. Query daftar memakai
+subquery berkorelasi per halaman (20 baris); kolom `tenants.id` ditulis eksplisit karena Drizzle membuang awalan tabel pada
+query satu-tabel.
