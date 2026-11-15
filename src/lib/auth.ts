@@ -11,12 +11,36 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { eq } from "drizzle-orm";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts, sessions, users, verifications } from "@/db/schema";
+import { accounts, sessions, tenants, users, verifications } from "@/db/schema";
+import { DEMO_READONLY_MESSAGE } from "./demo";
 import { sendEmail } from "./email";
 import { consume } from "./rate-limit";
 import { appUrl, trustedOrigins } from "./utils";
+
+/** Endpoint yang mengubah akun — ditolak untuk akun di masjid demo. */
+const ACCOUNT_MUTATIONS = new Set([
+  "/change-password",
+  "/set-password",
+  "/update-user",
+  "/change-email",
+  "/delete-user",
+  "/revoke-session",
+  "/revoke-sessions",
+  "/revoke-other-sessions",
+]);
+
+async function isDemoUser(userId: string) {
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .innerJoin(tenants, eq(tenants.id, users.tenantId))
+    .where(and(eq(users.id, userId), eq(tenants.isDemo, true), ne(users.role, "SUPERADMIN")))
+    .limit(1);
+  return Boolean(row);
+}
 
 export const auth = betterAuth({
   appName: "WebMasjid",
@@ -81,6 +105,17 @@ export const auth = betterAuth({
         },
       },
     },
+  },
+  hooks: {
+    // Akun masjid demo dipakai bersama: password/nama/email tidak boleh diubah,
+    // termasuk lewat panggilan langsung ke /api/auth/*.
+    before: createAuthMiddleware(async (ctx) => {
+      if (!ACCOUNT_MUTATIONS.has(ctx.path)) return;
+      const session = await getSessionFromCtx(ctx);
+      if (session && (await isDemoUser(session.user.id))) {
+        throw new APIError("FORBIDDEN", { message: DEMO_READONLY_MESSAGE });
+      }
+    }),
   },
   // Batas percobaan untuk request langsung ke /api/auth/* (disimpan di DB agar
   // berlaku lintas instance serverless). Server action memakai checkLimits().
