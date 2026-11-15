@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Landmark } from "lucide-react";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { ROLE_LABELS } from "@/lib/constants";
+import { isReadOnlyDemo } from "@/lib/demo";
 import { requireTenantAccess } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,8 @@ export default async function AdminLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { tenant, user } = await requireTenantAccess(slug);
+  const access = await requireTenantAccess(slug);
+  const { tenant, user } = access;
   const canManage = user.role !== "BENDAHARA";
 
   return (
@@ -35,7 +37,18 @@ export default async function AdminLayout({
         <aside className="min-w-0 md:sticky md:top-20 md:self-start print:hidden">
           <AdminNav slug={tenant.slug} canManage={canManage} />
         </aside>
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0">
+          {isReadOnlyDemo(access) && (
+            <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 print:hidden">
+              <b>Mode demo</b> — silakan jelajahi semua menu, tetapi perubahan tidak disimpan.{" "}
+              <Link href="/daftar" className="font-medium underline">
+                Daftarkan masjid Anda
+              </Link>{" "}
+              untuk mulai memakai WebMasjid.
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );
