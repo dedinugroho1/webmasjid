@@ -109,3 +109,46 @@ export async function platformStats() {
   const [{ users: totalUsers }] = await db.select({ users: count() }).from(users);
   return { ...row, users: totalUsers };
 }
+
+export type UserFilter = "semua" | "SUPERADMIN" | "DKM_ADMIN" | "BENDAHARA" | "tanpa-masjid";
+
+export function parseUserFilter(v: string | undefined): UserFilter {
+  return v === "SUPERADMIN" || v === "DKM_ADMIN" || v === "BENDAHARA" || v === "tanpa-masjid" ? v : "semua";
+}
+
+function userWhere(q: string, filter: UserFilter): SQL | undefined {
+  const conds: (SQL | undefined)[] = [];
+  const term = q.trim();
+  if (term) {
+    const like = `%${term.replace(/[%_\\]/g, "\\$&")}%`;
+    conds.push(or(ilike(users.email, like), ilike(users.name, like)));
+  }
+  if (filter === "tanpa-masjid") conds.push(and(isNull(users.tenantId), sql`${users.role} <> 'SUPERADMIN'`));
+  else if (filter !== "semua") conds.push(sql`${users.role} = ${filter}`);
+  return and(...conds);
+}
+
+export async function listUsersForAdmin(opts: { q: string; filter: UserFilter; page: number }) {
+  const where = userWhere(opts.q, opts.filter);
+  const page = Math.max(1, opts.page);
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        createdAt: users.createdAt,
+        tenantName: tenants.name,
+        tenantSlug: tenants.slug,
+      })
+      .from(users)
+      .leftJoin(tenants, sql`${tenants.id} = ${users.tenantId}`)
+      .where(where)
+      .orderBy(desc(users.createdAt))
+      .limit(ADMIN_PAGE_SIZE)
+      .offset((page - 1) * ADMIN_PAGE_SIZE),
+    db.select({ total: count() }).from(users).where(where),
+  ]);
+  return { rows, total, page, pages: Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE)) };
+}
