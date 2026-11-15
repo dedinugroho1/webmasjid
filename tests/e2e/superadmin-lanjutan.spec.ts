@@ -56,6 +56,8 @@ test("moderasi: masjid baru menunggu persetujuan, tersembunyi dari direktori, la
 
     // Setujui → tampil di direktori & sitemap, banner hilang, tanpa noindex.
     await row.getByRole("button", { name: "Setujui" }).click();
+    // Aksi berjalan di server; baris hilang dari antrean "menunggu" begitu persetujuan tersimpan.
+    await expect(sa.page.getByTestId(`tenant-${slug}`)).toHaveCount(0);
     await sa.page.goto(`/superadmin?q=${slug}`);
     await expect(sa.page.getByTestId(`tenant-${slug}`)).toContainText("Publik");
     expect(await (await o1.page.request.get("/")).text()).toContain(`href="/${slug}"`);
