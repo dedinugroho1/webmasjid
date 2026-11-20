@@ -1,15 +1,16 @@
 /**
  * Hapus data uji produksi: masjid ber-slug "prod-uji-…" (beserta seluruh
- * datanya, via ON DELETE CASCADE), akun ber-email "@prod-uji.test", dan —
+ * datanya, via ON DELETE CASCADE), akun ber-email "@prod-uji.test", catatan
+ * riwayat platform tentang keduanya, dan —
  * bila Bunny Storage dikonfigurasi di environment — folder foto masjid-masjid
  * uji tersebut di Bunny.
  *
  *   npx tsx scripts/cleanup-test-data.ts
  */
 import "./load-env";
-import { like } from "drizzle-orm";
+import { ilike, like, or } from "drizzle-orm";
 import { db } from "../src/db";
-import { tenants, users } from "../src/db/schema";
+import { platformAuditLogs, tenants, users } from "../src/db/schema";
 
 /** Hapus folder `{tenantId}/` di Bunny (rekursif). 404 = sudah tidak ada. */
 async function deleteBunnyFolder(tenantId: string) {
@@ -30,7 +31,20 @@ async function main() {
   }
   const removed = await db.delete(tenants).where(like(tenants.slug, "prod-uji-%")).returning({ slug: tenants.slug });
   const u = await db.delete(users).where(like(users.email, "%@prod-uji.test")).returning({ email: users.email });
-  console.log(`🧹 Data uji dihapus: ${removed.length} masjid, ${u.length} akun, ${folders} folder Bunny.`);
+  // Riwayat platform tidak ikut terhapus bersama masjid (sengaja), jadi dibersihkan terpisah.
+  const logs = await db
+    .delete(platformAuditLogs)
+    .where(
+      or(
+        ilike(platformAuditLogs.targetLabel, "%/prod-uji-%"),
+        ilike(platformAuditLogs.summary, "%/prod-uji-%"),
+        ilike(platformAuditLogs.actorEmail, "%@prod-uji.test"),
+      ),
+    )
+    .returning({ id: platformAuditLogs.id });
+  console.log(
+    `🧹 Data uji dihapus: ${removed.length} masjid, ${u.length} akun, ${logs.length} catatan riwayat, ${folders} folder Bunny.`,
+  );
   process.exit(0);
 }
 
