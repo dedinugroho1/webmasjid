@@ -74,6 +74,20 @@ export async function approveTenant(tenantId: string) {
   await updateTenant(me, tenantId, { approvedAt: new Date() }, "TENANT_APPROVE", (l) => `${l} disetujui`);
 }
 
+/** Tolak pendaftaran: masjid ditangguhkan dengan alasan berawalan "Ditolak:". */
+export async function rejectTenant(tenantId: string, reason: string) {
+  const me = await requireSuperadmin();
+  const why = cleanReason(reason);
+  await updateTenant(
+    me,
+    tenantId,
+    { suspendedAt: new Date(), suspendReason: `Ditolak${why ? `: ${why}` : ""}` },
+    "TENANT_REJECT",
+    (l) => `Pendaftaran ${l} ditolak${why ? `: ${why}` : ""}`,
+    { reason: why },
+  );
+}
+
 export async function suspendTenant(tenantId: string, reason: string) {
   const me = await requireSuperadmin();
   const why = cleanReason(reason);
