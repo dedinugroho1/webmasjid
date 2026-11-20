@@ -4,22 +4,21 @@ import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 
 /** Jalankan satu query ke database tes (driver mengikuti DATABASE_DRIVER). */
-export async function testQuery(sql: string, params: unknown[] = []) {
-  if (!process.env.DATABASE_URL) return;
+export async function testQuery<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T[]> {
+  if (!process.env.DATABASE_URL) return [];
   if (process.env.DATABASE_DRIVER === "neon") {
     neonConfig.webSocketConstructor = ws;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     try {
-      await pool.query(sql, params);
+      return (await pool.query(sql, params)).rows as T[];
     } finally {
       await pool.end();
     }
-    return;
   }
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
-    await client.query(sql, params);
+    return (await client.query(sql, params)).rows as T[];
   } finally {
     await client.end();
   }
