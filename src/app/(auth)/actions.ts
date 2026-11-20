@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -14,6 +15,7 @@ import { checkLimits, clientIp, LIMITS } from "@/lib/rate-limit";
 import { isValidSlug } from "@/lib/reserved-slugs";
 import { isDisposableEmail, looksLikeSpamText, verifyFormToken } from "@/lib/spam";
 import { getPlatformSettings } from "@/lib/platform-settings";
+import { notifyNewRegistration } from "@/lib/admin-notify";
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
 
@@ -164,6 +166,18 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     await tx.update(sessions).set({ tenantId }).where(eq(sessions.userId, userId));
     await tx.insert(prayerSettings).values({ tenantId, calculationMethod: "KEMENAG", iqomahOffsetMinutes: 10 });
   });
+
+  // Kabari pengelola platform setelah respons terkirim (tidak memperlambat pendaftar).
+  after(() =>
+    notifyNewRegistration({
+      masjidName: data.masjidName,
+      slug: data.slug,
+      city: city.name,
+      adminName: data.adminName,
+      adminEmail: data.email,
+      needsApproval: settings.moderationEnabled,
+    }),
+  );
 
   redirect(`/${data.slug}/admin?welcome=1`);
 }
