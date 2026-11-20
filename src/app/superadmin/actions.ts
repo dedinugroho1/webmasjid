@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { z } from "zod";
 import { db } from "@/db";
@@ -105,6 +105,49 @@ export async function suspendTenant(tenantId: string, reason: string) {
 export async function unsuspendTenant(tenantId: string) {
   const me = await requireSuperadmin();
   await updateTenant(me, tenantId, { suspendedAt: null, suspendReason: null }, "TENANT_RESTORE", (l) => `${l} dipulihkan`);
+}
+
+// ─── Aksi massal antrean persetujuan ────────────────────────────────────
+export type BulkResult = { ok: true; count: number } | { ok: false; error: string };
+
+const idsSchema = z.array(z.string().uuid()).min(1, "Pilih minimal satu masjid.").max(100);
+
+/** Hanya masjid yang memang masih menunggu (belum disetujui & tidak ditangguhkan). */
+async function pendingAmong(ids: string[]) {
+  return db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(and(inArray(tenants.id, ids), isNull(tenants.approvedAt), isNull(tenants.suspendedAt)));
+}
+
+export async function approveTenants(tenantIds: string[]): Promise<BulkResult> {
+  const me = await requireSuperadmin();
+  const parsed = idsSchema.safeParse(tenantIds);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Pilihan tidak valid." };
+  const pending = await pendingAmong(parsed.data);
+  for (const { id } of pending) {
+    await updateTenant(me, id, { approvedAt: new Date() }, "TENANT_APPROVE", (l) => `${l} disetujui (massal)`);
+  }
+  return { ok: true, count: pending.length };
+}
+
+export async function rejectTenants(tenantIds: string[], reason: string): Promise<BulkResult> {
+  const me = await requireSuperadmin();
+  const parsed = idsSchema.safeParse(tenantIds);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Pilihan tidak valid." };
+  const why = cleanReason(reason);
+  const pending = await pendingAmong(parsed.data);
+  for (const { id } of pending) {
+    await updateTenant(
+      me,
+      id,
+      { suspendedAt: new Date(), suspendReason: `Ditolak${why ? `: ${why}` : ""}` },
+      "TENANT_REJECT",
+      (l) => `Pendaftaran ${l} ditolak (massal)${why ? `: ${why}` : ""}`,
+      { reason: why },
+    );
+  }
+  return { ok: true, count: pending.length };
 }
 
 // ─── Pengaturan platform ────────────────────────────────────────────────
