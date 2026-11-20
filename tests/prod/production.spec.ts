@@ -311,6 +311,9 @@ test("11. superadmin: tangguhkan & pulihkan masjid", async () => {
   await expect(row.getByText("Publik")).toBeVisible();
   expect((await page.request.get(`/${SLUG}`)).status()).toBe(200);
 
+  // Aksi massal tersedia (tidak dijalankan di production), tombol hapus ada untuk masjid non-demo.
+  await expect(row.getByRole("button", { name: "Hapus", exact: true })).toBeVisible();
+
   // Kontak admin, ekspor CSV, dan tombol pengaturan platform (hanya dilihat, tidak diubah di production).
   await expect(row.getByTestId("admin-contact")).toContainText(ADMIN.email);
   await expect(page.getByTestId("switch-registration")).toBeVisible();
@@ -324,6 +327,15 @@ test("11. superadmin: tangguhkan & pulihkan masjid", async () => {
   const me = page.getByTestId(`user-${ADMIN.email}`);
   await expect(me).toContainText("Anda");
   await expect(me.getByRole("button")).toHaveCount(0);
+
+  // Riwayat platform mencatat penangguhan & pemulihan tadi beserta pelakunya (email tersamar).
+  await page.goto(`/superadmin/riwayat?q=${SLUG}`);
+  const log = page.getByTestId("platform-audit-list");
+  await expect(log).toContainText("Masjid ditangguhkan");
+  await expect(log).toContainText("Uji produksi");
+  await expect(log).toContainText("Masjid dipulihkan");
+  await expect(log).toContainText("ad***@prod-uji.test");
+  await expect(log).not.toContainText(ADMIN.email);
 });
 
 test("12. batas percobaan API aktif", async ({ request }) => {
@@ -427,6 +439,14 @@ test("17. hapus masjid: halaman, akun, dan foto di Bunny ikut terhapus", async (
   await page.waitForURL(/\/masuk\?dihapus=1/);
   await expect(page.getByText(/telah dihapus permanen/)).toBeVisible();
   expect((await page.request.get(`/${SLUG}`)).status()).toBe(404);
+
+  // Penghapusan tercatat di riwayat platform (akun uji masih superadmin).
+  await page.fill("#email", ADMIN.email);
+  await page.fill("#password", NEW_PASSWORD);
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await page.waitForURL("**/superadmin");
+  await page.goto(`/superadmin/riwayat?q=${SLUG}`);
+  await expect(page.getByTestId("platform-audit-entry").first()).toContainText("Masjid dihapus");
 
   // File di penyimpanan asal Bunny harus hilang. (Alamat CDN bisa tetap menyajikan salinan cache
   // sebentar, jadi yang diperiksa adalah penyimpanan asalnya, bukan CDN.) Butuh password zone di environment tes.
