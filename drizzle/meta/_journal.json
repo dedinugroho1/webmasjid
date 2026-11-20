@@ -85,6 +85,13 @@
       "when": 1794735492656,
       "tag": "0011_tenant_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795157911431,
+      "tag": "0012_platform_audit_logs",
+      "breakpoints": true
     }
   ]
 }

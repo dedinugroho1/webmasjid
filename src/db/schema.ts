@@ -320,6 +320,47 @@ export const auditLogs = pgTable(
   ],
 );
 
+// ─── Riwayat Tindakan Pengelola Platform ────────────────────────────────
+export type PlatformAuditAction =
+  | "TENANT_APPROVE"
+  | "TENANT_REJECT"
+  | "TENANT_SUSPEND"
+  | "TENANT_RESTORE"
+  | "TENANT_PUBLISH"
+  | "TENANT_HIDE"
+  | "TENANT_SLUG"
+  | "TENANT_DELETE"
+  | "SETTING_REGISTRATION"
+  | "SETTING_MODERATION"
+  | "USER_ROLE"
+  | "USER_PASSWORD_RESET"
+  | "USER_DELETE";
+
+/**
+ * Jejak tindakan superadmin (dan penghapusan masjid) di tingkat platform.
+ * Tanpa foreign key ke tenant/user: catatan harus tetap ada walau masjid atau
+ * akun yang bersangkutan sudah dihapus.
+ */
+export const platformAuditLogs = pgTable(
+  "platform_audit_logs",
+  {
+    id: id(),
+    action: text("action").$type<PlatformAuditAction>().notNull(),
+    actorId: text("actor_id"),
+    actorName: text("actor_name").notNull(),
+    actorEmail: text("actor_email"),
+    /** "tenant", "user", atau "setting". */
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id"),
+    /** Label yang mudah dibaca (nama masjid, nama pengguna dengan email disamarkan). */
+    targetLabel: text("target_label"),
+    summary: text("summary").notNull(),
+    details: jsonb("details").$type<Record<string, unknown> | null>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("platform_audit_created_idx").on(t.createdAt), index("platform_audit_target_idx").on(t.targetType, t.targetId)],
+);
+
 // ─── Pengumuman ─────────────────────────────────────────────────────────
 export const announcements = pgTable(
   "announcements",
@@ -472,6 +513,7 @@ export type PrayerSetting = typeof prayerSettings.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type PlatformAuditLog = typeof platformAuditLogs.$inferSelect;
 export type JumatSchedule = typeof jumatSchedules.$inferSelect;
 export type RoutineKajian = typeof routineKajian.$inferSelect;
 export type GalleryItem = typeof galleryItems.$inferSelect;
