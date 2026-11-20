@@ -1,4 +1,5 @@
 import { PNG, tenantFiles, tenantIdOf } from "./bunny-helpers";
+import { testQuery } from "./db";
 import { DEMO, expect, login, registerMasjid, test, uniq } from "./helpers";
 
 test("hapus masjid: konfirmasi wajib, semua data, akun pengurus, dan foto ikut terhapus", async ({ page, browser }) => {
@@ -60,6 +61,14 @@ test("hapus masjid: konfirmasi wajib, semua data, akun pengurus, dan foto ikut t
     await expect(page.getByText("Email atau password salah."), `${who} masih bisa masuk`).toBeVisible();
   }
   expect(await tenantFiles(page, tenantId)).toEqual([]);
+
+  // Jejaknya tetap tercatat di riwayat platform walau masjidnya sudah tiada.
+  const logs = await testQuery<{ action: string; actor_name: string; details: { removedUsers: number; by: string } }>(
+    "select action, actor_name, details from platform_audit_logs where target_id = $1",
+    [tenantId],
+  );
+  expect(logs).toHaveLength(1);
+  expect(logs[0]).toMatchObject({ action: "TENANT_DELETE", actor_name: "Admin Uji", details: { removedUsers: 2, by: "DKM_ADMIN" } });
   await bctx.close();
 });
 
