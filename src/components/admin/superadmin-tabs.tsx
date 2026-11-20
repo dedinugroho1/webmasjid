@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/superadmin", label: "Masjid" },
   { href: "/superadmin/pengguna", label: "Pengguna" },
+  { href: "/superadmin/riwayat", label: "Riwayat" },
 ];
 
 export function SuperadminTabs() {
