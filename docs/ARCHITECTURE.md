@@ -118,3 +118,12 @@ terhapus (cascade) saat masjid dihapus.
 moderasi) disimpan di `platform_settings` dan menimpa default dari environment tanpa deploy ulang. Query daftar memakai
 subquery berkorelasi per halaman (20 baris); kolom `tenants.id` ditulis eksplisit karena Drizzle membuang awalan tabel pada
 query satu-tabel.
+
+Setiap tindakan superadmin (setujui/tolak/tangguhkan/pulihkan, tampil/sembunyi, ubah slug, hapus masjid, sakelar
+platform, ubah peran, reset password, hapus akun) serta penghapusan masjid oleh admin DKM-nya sendiri dicatat di
+`platform_audit_logs`, dalam transaksi yang sama dengan perubahannya bila memungkinkan. Tabel ini sengaja **tanpa foreign
+key** ke tenant/user agar jejaknya bertahan setelah masjid atau akun dihapus; label pengguna dan email pelaku disimpan
+tersamar (`ah***@domain`). Riwayat dibaca di `/superadmin/riwayat` (cari + filter jenis, 30 baris per halaman).
+
+Pendaftaran baru memicu email ke alamat di `ADMIN_NOTIFY_EMAIL` lewat `after()` dari `next/server`, sehingga pengiriman
+email tidak memperlambat atau menggagalkan pendaftaran.

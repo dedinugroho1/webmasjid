@@ -19,7 +19,7 @@ export default function PrivasiPage() {
   );
 
   return (
-    <LegalPage title="Kebijakan Privasi" updated="15 November 2026">
+    <LegalPage title="Kebijakan Privasi" updated="20 November 2026">
       <p>
         WebMasjid membantu pengurus masjid (DKM) memiliki website sederhana: buku kas, petugas Jumat, kajian rutin, dan
         jadwal sholat. Halaman ini menjelaskan data apa yang kami simpan dan bagaimana kami menjaganya. Layanan ini
@@ -45,6 +45,12 @@ export default function PrivasiPage() {
             pengurus dicatat bersama nama pelaku, waktu, dan ringkasan isinya, agar keuangan masjid dapat
             dipertanggungjawabkan. Riwayat ini hanya terlihat oleh pengurus masjid yang bersangkutan dan ikut terhapus
             bila masjid dihapus.
+          </li>
+          <li>
+            <b>Riwayat pengelola platform:</b> tindakan kami sebagai pengelola (menyetujui, menangguhkan, atau menghapus
+            masjid; mengubah atau menghapus akun) dan penghapusan masjid oleh pengurusnya dicatat untuk akuntabilitas.
+            Catatan ini memuat nama masjid, nama pengguna, dan email yang <b>disamarkan</b> (mis. <i>ah***@gmail.com</i>),
+            hanya terlihat oleh pengelola platform, dan tetap disimpan setelah masjid atau akun dihapus.
           </li>
           <li>
             <b>Data teknis:</b> alamat IP dan jenis perangkat/browser saat masuk (untuk keamanan sesi), serta penghitung
@@ -76,6 +82,10 @@ export default function PrivasiPage() {
           <li>Menjalankan layanan: login, pengelolaan data masjid, dan menampilkan website masjid.</li>
           <li>Menjaga keamanan: membatasi percobaan masuk berulang, mencegah pendaftaran palsu/spam.</li>
           <li>Mengirim email penting, misalnya tautan atur ulang kata sandi (bila fitur email diaktifkan).</li>
+          <li>
+            Memberi tahu pengelola platform saat ada masjid baru mendaftar (nama masjid, nama dan email admin), untuk
+            meninjau pendaftaran.
+          </li>
         </ul>
         <p>Kami tidak menjual data dan tidak memakainya untuk iklan.</p>
       </Clause>
@@ -114,7 +124,8 @@ export default function PrivasiPage() {
           Data disimpan selama masjid aktif. Sesi login berakhir otomatis setelah 30 hari. Admin DKM dapat{" "}
           <b>menghapus masjid beserta seluruh datanya</b> kapan saja lewat menu <b>Pengaturan → Hapus Masjid</b>; akun
           pengurus, catatan kas, agenda, pengumuman, dan foto di penyimpanan ikut terhapus permanen dan tidak dapat
-          dipulihkan. Sebelum menghapus, unduh dulu laporan kas (PDF/Excel) bila masih dibutuhkan.
+          dipulihkan. Sebelum menghapus, unduh dulu laporan kas (PDF/Excel) bila masih dibutuhkan. Yang tersisa hanya satu
+          baris di riwayat pengelola platform bahwa masjid tersebut pernah dihapus (dengan email yang disamarkan).
         </p>
         <p>
           Foto dikirim melalui jaringan CDN, sehingga salinan sementara (<i>cache</i>) sebuah foto yang sudah dihapus

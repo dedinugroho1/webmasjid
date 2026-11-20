@@ -29,6 +29,8 @@ Centang satu per satu sebelum mengumumkan WebMasjid ke masjid-masjid.
 - [ ] **Domain `webmasjid.com`:** hubungkan di Vercel → Domains, lalu isi `NEXT_PUBLIC_APP_URL`,
       `BETTER_AUTH_URL`, dan `PLATFORM_HOSTS` ([SELF-HOSTING.md](SELF-HOSTING.md)).
 - [ ] **Email lupa password:** `RESEND_API_KEY` dan `EMAIL_FROM`.
+- [ ] **Notifikasi pendaftar baru:** isi `ADMIN_NOTIFY_EMAIL` (boleh beberapa, dipisah koma) agar Anda dikabari setiap
+      ada masjid mendaftar, lengkap dengan tautan ke antrean persetujuan.
 - [ ] **Cache Pull Zone Bunny:** turunkan *Cache Expiration Time* (mis. 1 jam) agar foto yang dihapus cepat tidak
       terbuka lagi lewat alamat langsungnya ([DEPLOY-VERCEL.md](DEPLOY-VERCEL.md)).
 - [ ] **Uptime monitor** (mis. UptimeRobot/BetterStack, gratis) ke `https://domain-anda/api/health`
@@ -43,5 +45,8 @@ Centang satu per satu sebelum mengumumkan WebMasjid ke masjid-masjid.
 - [ ] Jalankan tes langsung ke production: `PROD_URL=https://domain-anda npm run test:prod`
       (butuh `.env.local` berisi koneksi database untuk membersihkan data uji).
 - [ ] Cek panel `/superadmin` berkala: antrean "Menunggu persetujuan" dan pendaftaran mencurigakan. Kontak admin tiap
-      masjid ada di daftar, dan tombol **Ekspor CSV** memberi daftar lengkap untuk dihubungi.
+      masjid ada di daftar, dan tombol **Ekspor CSV** memberi daftar lengkap untuk dihubungi. Antrean bisa disetujui atau
+      ditolak sekaligus lewat kotak centang.
+- [ ] Tinjau tab **Riwayat** di panel superadmin bila ada lebih dari satu pengelola platform: semua persetujuan,
+      penangguhan, penghapusan, dan perubahan akun tercatat beserta pelakunya.
 - [ ] Bila spam pendaftaran masih lolos: aktifkan moderasi, atau tambahkan CAPTCHA (Cloudflare Turnstile).

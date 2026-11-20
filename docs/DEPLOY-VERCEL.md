@@ -46,6 +46,7 @@ sesuai rekomendasi Neon untuk Vercel Fluid compute. `DATABASE_DRIVER=neon` memak
 | `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL` | **kosongkan** saat memakai subdomain Vercel — terdeteksi otomatis. Isi `https://domain-anda` setelah memasang domain sendiri. |
 | `PLATFORM_HOSTS` | domain milik platform bila memakai domain sendiri, mis. `webmasjid.com,www.webmasjid.com` |
 | `RESEND_API_KEY`, `EMAIL_FROM` | opsional, untuk email lupa password |
+| `ADMIN_NOTIFY_EMAIL` | opsional, email pengelola yang dikabari setiap ada masjid baru mendaftar (butuh Resend) |
 | `BUNNY_STORAGE_ZONE`, `BUNNY_STORAGE_PASSWORD`, `BUNNY_STORAGE_REGION`, `BUNNY_CDN_URL` | disarankan — penyimpanan foto di Bunny (lihat bagian *Penyimpanan foto*) |
 
 ## Penyimpanan foto (Bunny Storage)
