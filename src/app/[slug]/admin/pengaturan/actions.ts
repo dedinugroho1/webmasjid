@@ -147,7 +147,13 @@ export async function deleteMasjid(slug: string, _prev: DeleteMasjidState, formD
     return { error: `Ketik persis "${tenant.slug}" untuk mengonfirmasi penghapusan.` };
   }
 
-  const result = await deleteTenantCompletely(tenant.id);
+  const result = await deleteTenantCompletely(tenant.id, {
+    action: "TENANT_DELETE",
+    actor: access.user,
+    target: { type: "tenant", id: tenant.id, label: `${tenant.name} (/${tenant.slug})` },
+    summary: `Masjid ${tenant.name} (/${tenant.slug}) dihapus oleh admin DKM-nya sendiri`,
+    details: { slug: tenant.slug, by: "DKM_ADMIN" },
+  });
   if (!result.storageCleaned) console.error(`[hapus-masjid] Foto ${tenant.id} di penyimpanan belum terhapus`);
   revalidatePath("/", "layout");
   redirect("/masuk?dihapus=1");
