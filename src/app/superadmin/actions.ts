@@ -11,6 +11,7 @@ import { recordPlatformAudit } from "@/lib/platform-audit";
 import { userLabel } from "@/lib/platform-audit-core";
 import { setPlatformSetting } from "@/lib/platform-settings";
 import { requireSuperadmin } from "@/lib/session";
+import { deleteTenantCompletely } from "@/lib/tenant-delete";
 import { generateTempPassword } from "@/lib/tokens";
 
 export type SlugState = { ok?: boolean; error?: string } | null;
@@ -172,6 +173,33 @@ export async function changeSlug(tenantId: string, _prev: SlugState, formData: F
     return { error: "Slug sudah dipakai masjid lain" };
   }
   refresh([current.slug, parsed.data]);
+  return { ok: true };
+}
+
+export type DeleteTenantResult = { ok: true } | { ok: false; error: string };
+
+/** Hapus masjid beserta seluruh datanya. Konfirmasi harus berupa slug masjid. */
+export async function deleteTenant(tenantId: string, confirm: string): Promise<DeleteTenantResult> {
+  const me = await requireSuperadmin();
+  const [t] = await db
+    .select({ id: tenants.id, name: tenants.name, slug: tenants.slug, isDemo: tenants.isDemo })
+    .from(tenants)
+    .where(eq(tenants.id, tenantId))
+    .limit(1);
+  if (!t) return { ok: false, error: "Masjid tidak ditemukan." };
+  if (t.isDemo) return { ok: false, error: "Masjid demo tidak dapat dihapus." };
+  if (confirm.trim() !== t.slug) return { ok: false, error: `Ketik persis "${t.slug}" untuk mengonfirmasi.` };
+
+  const result = await deleteTenantCompletely(t.id, {
+    action: "TENANT_DELETE",
+    actor: me,
+    target: { type: "tenant", id: t.id, label: tenantLabel(t) },
+    summary: `Masjid ${tenantLabel(t)} dihapus permanen oleh superadmin`,
+    details: { slug: t.slug, by: "SUPERADMIN" },
+  });
+  if (!result.storageCleaned) console.error(`[superadmin] Foto ${t.id} di penyimpanan belum terhapus`);
+  refresh([t.slug]);
+  revalidatePath("/superadmin/pengguna");
   return { ok: true };
 }
 
