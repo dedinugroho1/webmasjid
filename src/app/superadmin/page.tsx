@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Download, Search } from "lucide-react";
 import { PlatformSwitches } from "@/components/admin/platform-switches";
-import { SuperadminRow } from "@/components/admin/superadmin-row";
+import { TenantList } from "@/components/admin/tenant-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,31 @@ import { PaginationLinks } from "@/components/ui/pagination-links";
 import { formatDate } from "@/lib/format";
 import { getPlatformSettings } from "@/lib/platform-settings";
 import { listTenantsForAdmin, parseTenantFilter, parseTenantSort, platformStats } from "@/lib/superadmin-queries";
-import { approveTenant, changeSlug, setModerationEnabled, setPublished, setRegistrationOpen, suspendTenant, unsuspendTenant } from "./actions";
+import {
+  approveTenant,
+  approveTenants,
+  changeSlug,
+  deleteTenant,
+  rejectTenant,
+  rejectTenants,
+  setModerationEnabled,
+  setPublished,
+  setRegistrationOpen,
+  suspendTenant,
+  unsuspendTenant,
+} from "./actions";
+
+const TENANT_ACTIONS = {
+  setPublished,
+  approveTenant,
+  rejectTenant,
+  suspendTenant,
+  unsuspendTenant,
+  changeSlug,
+  deleteTenant,
+  approveTenants,
+  rejectTenants,
+};
 
 export const metadata: Metadata = { title: "Superadmin", robots: { index: false } };
 
@@ -64,7 +88,7 @@ export default async function SuperadminPage({ searchParams }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>Semua Masjid</CardTitle>
-          <CardDescription>Setujui pendaftaran, tangguhkan yang palsu, hubungi admin, atau ubah alamat masjid.</CardDescription>
+          <CardDescription>Setujui pendaftaran (satu per satu atau sekaligus), tangguhkan atau hapus yang palsu, hubungi admin, atau ubah alamat masjid.</CardDescription>
           <form className="mt-2 flex flex-wrap items-center gap-2" method="GET">
             <Input name="q" defaultValue={q} placeholder="Cari nama, alamat, kota, atau email admin…" className="max-w-xs" aria-label="Cari masjid" />
             <NativeSelect name="status" defaultValue={filter} className="w-auto" aria-label="Filter status">
@@ -92,24 +116,15 @@ export default async function SuperadminPage({ searchParams }: Props) {
           {list.rows.length === 0 ? (
             <p className="text-muted-foreground text-sm">Tidak ada masjid yang cocok.</p>
           ) : (
-            <ul className="divide-y">
-              {list.rows.map((r) => (
-                <SuperadminRow
-                  key={r.id}
-                  row={{
-                    ...r,
-                    createdAt: formatDate(r.createdAt),
-                    approvedAt: r.approvedAt?.toISOString() ?? null,
-                    suspendedAt: r.suspendedAt?.toISOString() ?? null,
-                  }}
-                  onPublish={setPublished.bind(null, r.id)}
-                  onApprove={approveTenant.bind(null, r.id)}
-                  onSuspend={suspendTenant.bind(null, r.id)}
-                  onUnsuspend={unsuspendTenant.bind(null, r.id)}
-                  onChangeSlug={changeSlug.bind(null, r.id)}
-                />
-              ))}
-            </ul>
+            <TenantList
+              rows={list.rows.map((r) => ({
+                ...r,
+                createdAt: formatDate(r.createdAt),
+                approvedAt: r.approvedAt?.toISOString() ?? null,
+                suspendedAt: r.suspendedAt?.toISOString() ?? null,
+              }))}
+              actions={TENANT_ACTIONS}
+            />
           )}
           <PaginationLinks page={list.page} pages={list.pages} total={list.total} noun="masjid" hrefFor={(p) => query({ hal: p })} />
         </CardContent>
