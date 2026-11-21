@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RequestResetForm } from "@/components/auth/password-reset-forms";
 import { emailEnabled } from "@/lib/email";
 
 export const metadata: Metadata = { title: "Lupa Password" };
 
-export default function LupaPasswordPage() {
+export default async function LupaPasswordPage() {
+  // Status email dibaca dari environment saat request, bukan saat build.
+  await connection();
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
