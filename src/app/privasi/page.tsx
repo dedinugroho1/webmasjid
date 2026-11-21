@@ -19,7 +19,7 @@ export default function PrivasiPage() {
   );
 
   return (
-    <LegalPage title="Kebijakan Privasi" updated="20 November 2026">
+    <LegalPage title="Kebijakan Privasi" updated="21 November 2026">
       <p>
         WebMasjid membantu pengurus masjid (DKM) memiliki website sederhana: buku kas, petugas Jumat, kajian rutin, dan
         jadwal sholat. Halaman ini menjelaskan data apa yang kami simpan dan bagaimana kami menjaganya. Layanan ini
@@ -102,7 +102,7 @@ export default function PrivasiPage() {
             <b>Bunny.net</b> — penyimpanan dan pengiriman foto (logo, QRIS, galeri, bukti transaksi).
           </li>
           <li>
-            <b>Resend</b> — pengiriman email, hanya bila diaktifkan.
+            <b>Mailketing</b> — pengiriman email (atur ulang kata sandi dan pemberitahuan), hanya bila diaktifkan.
           </li>
         </ul>
         <p>

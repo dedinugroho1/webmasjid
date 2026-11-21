@@ -45,7 +45,7 @@ Better Auth:
 - Admin DKM membuat link `/undangan/{token}` (token acak, disimpan sebagai hash SHA-256, sekali pakai,
   berlaku 7 hari). Klaim undangan dilakukan dengan satu `UPDATE … WHERE accepted_at IS NULL` sehingga
   tidak bisa dipakai dua kali secara bersamaan.
-- Tanpa email (Resend), admin dapat membuat password sementara; semua sesi pengurus tersebut dicabut.
+- Tanpa email (Mailketing), admin dapat membuat password sementara; semua sesi pengurus tersebut dicabut.
 
 ## Rate limit
 

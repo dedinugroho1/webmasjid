@@ -28,7 +28,9 @@ Centang satu per satu sebelum mengumumkan WebMasjid ke masjid-masjid.
 
 - [ ] **Domain `webmasjid.com`:** hubungkan di Vercel → Domains, lalu isi `NEXT_PUBLIC_APP_URL`,
       `BETTER_AUTH_URL`, dan `PLATFORM_HOSTS` ([SELF-HOSTING.md](SELF-HOSTING.md)).
-- [ ] **Email lupa password:** `RESEND_API_KEY` dan `EMAIL_FROM`.
+- [ ] **Email lupa password:** daftar di [Mailketing](https://mailketing.co.id), tambahkan & aktifkan domain pengirim
+      (Pengaturan → Sender & Domain), lalu isi `MAILKETING_API_TOKEN` (Pengaturan → API Email) dan `EMAIL_FROM`
+      (mis. `WebMasjid <noreply@webmasjid.com>`). Setiap email memakai 1 kredit Mailketing; pantau sisa kreditnya.
 - [ ] **Notifikasi pendaftar baru:** isi `ADMIN_NOTIFY_EMAIL` (boleh beberapa, dipisah koma) agar Anda dikabari setiap
       ada masjid mendaftar, lengkap dengan tautan ke antrean persetujuan.
 - [ ] **Cache Pull Zone Bunny:** turunkan *Cache Expiration Time* (mis. 1 jam) agar foto yang dihapus cepat tidak
