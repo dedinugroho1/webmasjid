@@ -5,6 +5,10 @@
  *   DELETE /{zone}/{path}   hapus file (path berakhiran "/" = hapus folder rekursif)
  *   GET    /cdn/{path}      "Pull Zone": sajikan file
  *   GET    /__files         daftar path yang tersimpan (untuk asersi tes)
+ *
+ * Sekaligus Mailketing tiruan (API v2):
+ *   POST   /mailketing/api/v2/send   terima email (header Authorization: Bearer wajib cocok)
+ *   GET    /__emails                 daftar email yang diterima (untuk asersi tes)
  */
 import { createServer } from "node:http";
 
@@ -12,7 +16,9 @@ const PORT = Number(process.env.MOCK_BUNNY_PORT ?? 4010);
 const ZONE = process.env.BUNNY_STORAGE_ZONE ?? "webmasjid-test";
 const KEY = process.env.BUNNY_STORAGE_PASSWORD ?? "kunci-tes";
 const TYPES = { png: "image/png", jpg: "image/jpeg", webp: "image/webp", gif: "image/gif" };
+const MAIL_TOKEN = process.env.MAILKETING_API_TOKEN ?? "token-tes";
 const files = new Map();
+const emails = [];
 
 const json = (res, status, body) => {
   res.writeHead(status, { "Content-Type": "application/json" });
@@ -24,6 +30,27 @@ createServer(async (req, res) => {
   const path = decodeURIComponent(url.pathname);
 
   if (req.method === "GET" && path === "/__files") return json(res, 200, [...files.keys()].sort());
+  if (req.method === "GET" && path === "/__emails") return json(res, 200, emails);
+
+  if (req.method === "POST" && path === "/mailketing/api/v2/send") {
+    if (req.headers.authorization !== `Bearer ${MAIL_TOKEN}`) {
+      return json(res, 401, { success: false, data: null, message: "Invalid API token" });
+    }
+    const chunks = [];
+    for await (const c of req) chunks.push(c);
+    let body;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch {
+      return json(res, 422, { success: false, data: null, message: "Validation failed" });
+    }
+    const missing = ["from_name", "from_email", "recipient", "subject", "content"].filter((k) => !body[k]);
+    if (missing.length) {
+      return json(res, 422, { success: false, data: null, message: "Validation failed", errors: Object.fromEntries(missing.map((k) => [k, `${k} is required`])) });
+    }
+    emails.push({ ...body, receivedAt: new Date().toISOString() });
+    return json(res, 200, { success: true, data: { message_id: `<api.${emails.length}@mock>` }, message: "Email queued successfully" });
+  }
 
   if (req.method === "GET" && path.startsWith("/cdn/")) {
     const key = path.slice("/cdn/".length);

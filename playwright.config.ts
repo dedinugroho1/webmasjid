@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const MOCK_BUNNY_PORT = Number(process.env.MOCK_BUNNY_PORT ?? 4010);
-const MOCK_BUNNY_ENV = { BUNNY_STORAGE_ZONE: "webmasjid-test", BUNNY_STORAGE_PASSWORD: "kunci-tes" };
+const MOCK_BUNNY_ENV = { BUNNY_STORAGE_ZONE: "webmasjid-test", BUNNY_STORAGE_PASSWORD: "kunci-tes", MAILKETING_API_TOKEN: "token-tes" };
 
 /**
  * Tes end-to-end. Prasyarat: database sudah dimigrasi & di-seed
@@ -37,6 +37,10 @@ export default defineConfig({
         ...MOCK_BUNNY_ENV,
         BUNNY_STORAGE_ENDPOINT: `http://localhost:${MOCK_BUNNY_PORT}`,
         BUNNY_CDN_URL: `http://localhost:${MOCK_BUNNY_PORT}/cdn`,
+        // Mailketing tiruan di server yang sama.
+        MAILKETING_ENDPOINT: `http://localhost:${MOCK_BUNNY_PORT}/mailketing/api/v2/send`,
+        EMAIL_FROM: "WebMasjid Uji <noreply@webmasjid.test>",
+        ADMIN_NOTIFY_EMAIL: "platform@webmasjid.test",
       },
     },
   ],
